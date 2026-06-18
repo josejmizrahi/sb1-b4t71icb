@@ -12,12 +12,36 @@ sample the bootstrap interval on accuracy is wide -- we show it, not hide it.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import Callable
 
 import numpy as np
 from scipy.stats import binomtest
 
 from .model import DixonColesModel, predict_match
 from .types import FifaRank, Match
+
+# An "engine factory" fits on training matches and returns an object exposing
+# predict_lambdas(home, away) -> (lam_home, lam_away, rho). Both DixonColesModel
+# and MLGoalModel satisfy this, so validation is engine-agnostic.
+EngineFactory = Callable[[list[Match], list[FifaRank]], object]
+
+
+def dc_engine_factory(covariates: list[str]) -> EngineFactory:
+    def build(train, rankings):
+        model = DixonColesModel(covariates)
+        model.fit(train, rankings)
+        return model
+    return build
+
+
+def ml_engine_factory() -> EngineFactory:
+    def build(train, rankings):
+        from .ml_model import MLGoalModel
+
+        model = MLGoalModel()
+        model.fit(train, rankings)
+        return model
+    return build
 
 OUTCOMES = ("H", "D", "A")
 
@@ -86,14 +110,21 @@ def _rank_map(rankings: list[FifaRank]) -> dict[str, int]:
 
 
 def leave_one_out(matches: list[Match], rankings: list[FifaRank],
-                  covariates: list[str], n_sims: int = 20_000,
-                  n_boot: int = 1000) -> ValidationReport:
-    """Refit the model on all-but-one finished match and predict the held-out
-    one. Honest because the test match never informs its own prediction."""
+                  covariates: list[str] | None = None, n_sims: int = 20_000,
+                  n_boot: int = 1000,
+                  engine: EngineFactory | None = None) -> ValidationReport:
+    """Refit on all-but-one finished match and predict the held-out one. Honest
+    because the test match never informs its own prediction.
+
+    ``engine`` selects the estimator; defaults to Dixon-Coles on ``covariates``.
+    Pass ml_engine_factory() to validate the gradient-boosting engine."""
     finished = [m for m in matches if m.is_finished]
     notes: list[str] = []
     if len(finished) < 5:
         notes.append(f"Only {len(finished)} finished matches; LOO is very noisy.")
+
+    if engine is None:
+        engine = dc_engine_factory(covariates or ["rank_strength"])
 
     ranks = _rank_map(rankings)
     folds: list[FoldResult] = []
@@ -105,8 +136,7 @@ def leave_one_out(matches: list[Match], rankings: list[FifaRank],
     for i, test in enumerate(finished):
         train = [m for j, m in enumerate(finished) if j != i]
         try:
-            model = DixonColesModel(covariates)
-            model.fit(train, rankings)
+            model = engine(train, rankings)
             pred = predict_match(model, test.home_team, test.away_team,
                                  n_sims=n_sims, seed=i)
             pp = {"H": pred.prob_home, "D": pred.prob_draw, "A": pred.prob_away}
@@ -148,3 +178,44 @@ def leave_one_out(matches: list[Match], rankings: list[FifaRank],
         binomial_p_vs_chance=float(bt.pvalue),
         beats_all_baselines=beats, folds=folds, notes=notes,
     )
+
+
+@dataclass
+class EngineComparison:
+    dc: ValidationReport
+    ml: ValidationReport
+    winner: str                 # "dc" | "ml" | "tie"
+    decision_metric: str        # what we ranked on
+    notes: list[str] = field(default_factory=list)
+
+
+def compare_engines(matches: list[Match], rankings: list[FifaRank],
+                    covariates: list[str], n_sims: int = 15_000,
+                    n_boot: int = 1000) -> EngineComparison:
+    """Run honest LOO for BOTH engines and pick a winner by out-of-sample
+    log-loss (a proper scoring rule; ties broken by accuracy). Lower log-loss
+    wins. If neither clearly wins, we say 'tie' rather than overclaim."""
+    dc = leave_one_out(matches, rankings, covariates, n_sims=n_sims,
+                       n_boot=n_boot, engine=dc_engine_factory(covariates))
+    ml = leave_one_out(matches, rankings, covariates, n_sims=n_sims,
+                       n_boot=n_boot, engine=ml_engine_factory())
+
+    notes: list[str] = []
+    margin = dc.log_loss - ml.log_loss   # positive => ML better
+    if abs(margin) < 0.01:
+        winner = "tie"
+        notes.append("Engines are within 0.01 log-loss: effectively a tie on "
+                     "this sample. Prefer the simpler Dixon-Coles.")
+    elif margin > 0:
+        winner = "ml"
+    else:
+        winner = "dc"
+    notes.append(
+        f"LOO log-loss -- DC: {dc.log_loss:.3f}, ML: {ml.log_loss:.3f} "
+        f"(lower is better). Accuracy -- DC: {dc.accuracy:.3f}, "
+        f"ML: {ml.accuracy:.3f}.")
+    if not dc.beats_all_baselines and not ml.beats_all_baselines:
+        notes.append("NEITHER engine beats every baseline on this sample "
+                     "(reported honestly).")
+    return EngineComparison(dc=dc, ml=ml, winner=winner,
+                            decision_metric="loo_log_loss", notes=notes)

@@ -12,6 +12,7 @@ set DATA_PROVIDER=mock for an offline end-to-end demo.
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 
 from .config import load_config
@@ -42,8 +43,8 @@ def _print_wald(fit):
               f"{'*' if r['significant_5pct'] else ''}")
 
 
-def _print_validation(v):
-    print(f"\n[validacion LOO] n={v.n}")
+def _print_validation(v, label="validacion LOO"):
+    print(f"\n[{label}] n={v.n}")
     print(f"  acierto 1X2 : {v.accuracy:.3f}  IC95% [{v.acc_ci95[0]:.3f}, {v.acc_ci95[1]:.3f}]")
     print(f"  log-loss    : {v.log_loss:.3f}   Brier: {v.brier:.3f}")
     print(f"  binomial p  : {v.binomial_p_vs_chance:.3f} "
@@ -56,16 +57,45 @@ def _print_validation(v):
         print(f"  nota: {n}")
 
 
+def _print_comparison(cmp):
+    if cmp is None:
+        return
+    print("\n[comparacion de motores] (out-of-sample, LOO)")
+    print(f"  {'motor':14s} {'acierto':>8s} {'log-loss':>9s} {'Brier':>7s}")
+    print(f"  {'Dixon-Coles':14s} {cmp.dc.accuracy:8.3f} {cmp.dc.log_loss:9.3f} {cmp.dc.brier:7.3f}")
+    print(f"  {'ML (GBM)':14s} {cmp.ml.accuracy:8.3f} {cmp.ml.log_loss:9.3f} {cmp.ml.brier:7.3f}")
+    print(f"  ganador (menor log-loss): {cmp.winner.upper()}")
+    for n in cmp.notes:
+        print(f"  nota: {n}")
+
+
+def _print_ml_importance(ml_fit):
+    if ml_fit is None:
+        return
+    print("\n[ML] importancia por permutacion (relativa; con muestra chica, caveat)")
+    for row in ml_fit.importances[:10]:
+        print(f"    - {row['feature']:20s} {row['importance']:+.4f} "
+              f"(+/-{row['std']:.4f})")
+    for n in ml_fit.notes:
+        print(f"  nota: {n}")
+
+
 def cmd_predict(args):
+    if getattr(args, "engine", None):
+        os.environ["ENGINE"] = args.engine
     cfg = load_config()
     pipe = Pipeline(cfg)
     try:
         result = pipe.run_once(n_sims=args.sims)
         _print_selection(result.selection)
         _print_wald(result.fit)
-        _print_validation(result.validation)
+        _print_comparison(result.comparison)
+        _print_ml_importance(result.ml_fit)
+        _print_validation(result.validation,
+                          label=f"validacion motor PRIMARIO ({result.engine})")
         path = render_report(result, args.out)
-        print(f"\n[reporte] HTML escrito en: {path}")
+        print(f"\n[motor primario] {result.engine.upper()}")
+        print(f"[reporte] HTML escrito en: {path}")
         print(f"[predicciones] {len(result.predictions)} partidos proximos.")
     finally:
         pipe.close()
@@ -73,7 +103,7 @@ def cmd_predict(args):
 
 def cmd_backtest(args):
     from .selection import select_covariates
-    from .validation import leave_one_out
+    from .validation import compare_engines
 
     cfg = load_config()
     pipe = Pipeline(cfg)
@@ -83,25 +113,30 @@ def cmd_backtest(args):
         rankings = pipe.db.load_rankings()
         sel = select_covariates(matches, rankings)
         _print_selection(sel)
-        v = leave_one_out(matches, rankings, sel.selected, n_sims=args.sims)
-        _print_validation(v)
+        cmp = compare_engines(matches, rankings, sel.selected, n_sims=args.sims)
+        _print_validation(cmp.dc, label="LOO Dixon-Coles")
+        _print_validation(cmp.ml, label="LOO ML (GBM)")
+        _print_comparison(cmp)
     finally:
         pipe.close()
 
 
 def cmd_pipeline(args):
+    if getattr(args, "engine", None):
+        os.environ["ENGINE"] = args.engine
     cfg = load_config()
     pipe = Pipeline(cfg)
     try:
         result = pipe.run_once(n_sims=args.sims)
         print(f"[pipeline] run #{result.run_id} mode={result.mode} "
-              f"acc={result.validation.accuracy:.3f} "
+              f"engine={result.engine} acc={result.validation.accuracy:.3f} "
               f"newly_finished={len(result.newly_finished)}")
-        print("[historial de reentrenamientos]")
+        _print_comparison(result.comparison)
+        print("\n[historial de reentrenamientos]")
         for r in pipe.db.training_history():
             print(f"  run#{r['id']} {r['ts'][:19]} mode={r['mode']} "
-                  f"n={r['n_matches']} acc={r['accuracy']:.3f} "
-                  f"loglik={r['loglik']:.2f}")
+                  f"engine={r['engine']} n={r['n_matches']} "
+                  f"acc={r['accuracy']:.3f} loglik={r['loglik']:.2f}")
     finally:
         pipe.close()
 
@@ -139,6 +174,9 @@ def main(argv=None):
         sp = sub.add_parser(name)
         sp.add_argument("--sims", type=int, default=50_000,
                         help="Monte Carlo simulations per match")
+        if name in ("predict", "pipeline"):
+            sp.add_argument("--engine", choices=["ml", "dc", "auto"], default=None,
+                            help="Primary engine (default from ENGINE env, 'ml')")
         if name == "predict":
             sp.add_argument("--out", default="reports/report.html")
         if name == "watch":

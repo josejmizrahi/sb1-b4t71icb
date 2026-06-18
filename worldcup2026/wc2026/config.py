@@ -27,6 +27,7 @@ class Config:
     supabase_key: str | None
     poll_interval_hours: float
     mc_simulations: int
+    engine: str                 # 'ml' | 'dc' | 'auto'
 
     @property
     def has_xg_provider(self) -> bool:
@@ -57,4 +58,5 @@ def load_config() -> Config:
         supabase_key=_get("SUPABASE_KEY"),
         poll_interval_hours=float(_get("POLL_INTERVAL_HOURS", "6") or "6"),
         mc_simulations=int(_get("MC_SIMULATIONS", "50000") or "50000"),
+        engine=(_get("ENGINE", "ml") or "ml").lower(),
     )

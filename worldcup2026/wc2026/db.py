@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS training_runs (
     id           INTEGER PRIMARY KEY AUTOINCREMENT,
     ts           TEXT,
     mode         TEXT,           -- 'full' or 'reduced'
+    engine       TEXT,           -- 'ml' | 'dc'
     n_matches    INTEGER,
     covariates   TEXT,
     loglik       REAL,
@@ -154,18 +155,25 @@ class Database:
                 for r in self.conn.execute("SELECT * FROM fifa_rankings")]
 
     # -- training runs ----------------------------------------------------
-    def log_training_run(self, mode: str, fit, validation) -> int:
+    def log_training_run(self, mode: str, fit, validation, engine: str = "dc",
+                         extra_metrics: dict | None = None) -> int:
+        """Log a run. ``fit`` is always the Dixon-Coles FitResult (kept for the
+        interpretable Wald weights); ``validation`` is the PRIMARY engine's LOO
+        report; ``engine`` records which engine is primary."""
+        metrics = dict(validation.baselines)
+        if extra_metrics:
+            metrics.update(extra_metrics)
         cur = self.conn.execute(
             """INSERT INTO training_runs
-                 (ts, mode, n_matches, covariates, loglik, accuracy, log_loss,
-                  brier, acc_ci_low, acc_ci_high, binomial_p, beats_baselines,
-                  metrics_json)
-               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
-            (_now(), mode, fit.n_matches, json.dumps(fit.covariates), fit.loglik,
-             validation.accuracy, validation.log_loss, validation.brier,
-             validation.acc_ci95[0], validation.acc_ci95[1],
+                 (ts, mode, engine, n_matches, covariates, loglik, accuracy,
+                  log_loss, brier, acc_ci_low, acc_ci_high, binomial_p,
+                  beats_baselines, metrics_json)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            (_now(), mode, engine, fit.n_matches, json.dumps(fit.covariates),
+             fit.loglik, validation.accuracy, validation.log_loss,
+             validation.brier, validation.acc_ci95[0], validation.acc_ci95[1],
              validation.binomial_p_vs_chance, int(validation.beats_all_baselines),
-             json.dumps(validation.baselines)),
+             json.dumps(metrics)),
         )
         run_id = cur.lastrowid
         for row in fit.wald_table():

@@ -34,12 +34,33 @@ por cada ~10 partidos de entrenamiento**.
 
 ---
 
+## Dos motores, comparados honestamente
+
+El sistema corre **dos motores** y los compara **out-of-sample** (LOO) en cada run:
+
+- **Dixon-Coles** (paramétrico, ≤2-3 variables, robusto con muestra chica).
+- **ML avanzado** (gradient boosting Poisson regularizado, motor primario por
+  defecto `ENGINE=ml`): estima λ de cada equipo desde un set ampliado de
+  variables (rank, xG ataque/defensa, posesión, tiros, pases, forma) y alimenta
+  el **mismo** Monte Carlo + corrección Dixon-Coles, así que produce idénticos
+  marcadores/distribuciones/1X2/O/U/BTTS.
+
+El que se despliega lo decides con `ENGINE` (`ml` | `dc` | `auto`). **Pase lo que
+pase, el reporte muestra la comparación**: acierto, log-loss y Brier de ambos, y
+quién gana por log-loss (regla de scoring propia). El ML se entrena sobre filas
+**por equipo-partido** (duplica la muestra) y con regularización fuerte (árboles
+someros, L2, early stopping) — aun así, **con pocos partidos puede sobreajustar y
+perder contra el Dixon-Coles**; el sistema lo dice sin maquillar.
+
 ## Estructura
 
 | Archivo | Rol |
 |---|---|
 | `wc2026/data_provider.py` | Abstracción `DataProvider` + backends (football-data.org, openfootball, BALLDONTLIE, API-Football*, Sportmonks*, mock) |
 | `wc2026/model.py` | Dixon-Coles + MLE + Monte Carlo + shrinkage |
+| `wc2026/ml_model.py` | Motor ML avanzado: gradient boosting Poisson regularizado |
+| `wc2026/features.py` | Ingeniería de variables (filas por equipo-partido, xG/forma) |
+| `wc2026/fifa_ranking.py` | Ranking FIFA: ingest CSV + snapshot de 48 selecciones |
 | `wc2026/selection.py` | Selección de variables por evidencia (correlación + Lasso/ElasticNet + cap) |
 | `wc2026/validation.py` | Backtest LOO, baselines, bootstrap, test binomial |
 | `wc2026/temporal.py` | Primer gol (Poisson inhomogéneo con pausas de hidratación) |
@@ -108,8 +129,14 @@ SQLITE_PATH=worldcup2026.db
 # Demo offline sin API key (modo reducido sintético, end-to-end):
 DATA_PROVIDER=mock python -m wc2026.cli predict --out reports/report.html
 
-# Con datos reales:
-python -m wc2026.cli predict --sims 50000 --out reports/report.html
+# Datos reales GRATIS (sin xG, modo reducido):
+DATA_PROVIDER=openfootball python -m wc2026.cli predict --out reports/report.html
+
+# Datos reales CON xG (motor completo, requiere key):
+DATA_PROVIDER=balldontlie python -m wc2026.cli predict --sims 50000
+
+# Elegir motor explícitamente (ml | dc | auto):
+python -m wc2026.cli predict --engine auto
 ```
 
 Imprime selección de variables, tabla de Wald (coef, error estándar, p-value),
@@ -187,6 +214,14 @@ Esta sección no es decorativa: es el punto del proyecto.
 8. **Datos sintéticos en el demo.** `DATA_PROVIDER=mock` usa un dataset
    **sintético, claramente etiquetado**, generado por un proceso conocido para
    ejercitar la maquinaria offline. No son partidos reales.
+
+9. **El ML "avanzado" NO es automáticamente mejor.** Medido sobre los 24
+   partidos reales ya jugados del 2026 en modo reducido (solo rank), el gradient
+   boosting cayó a **33% de acierto (= azar) y perdió contra el Dixon-Coles y
+   contra todos los baselines**. Con muestra chica y poca señal, más capacidad de
+   modelo = más sobreajuste. El ML solo aporta cuando hay variables con señal real
+   (xG vía BALLDONTLIE) y aun así el reporte muestra la comparación honesta y
+   despliega el mejor out-of-sample si usas `ENGINE=auto`.
 
 ---
 

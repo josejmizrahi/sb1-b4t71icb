@@ -26,7 +26,9 @@ from .db import Database
 from .model import DixonColesModel, predict_match
 from .selection import SelectionReport, select_covariates
 from .temporal import predict_first_goal
-from .validation import ValidationReport, leave_one_out
+from .validation import (
+    EngineComparison, ValidationReport, compare_engines, leave_one_out,
+)
 from .types import Match
 
 
@@ -34,11 +36,14 @@ from .types import Match
 class PipelineResult:
     mode: str
     selection: SelectionReport
-    fit: object
-    validation: ValidationReport
+    fit: object                       # Dixon-Coles FitResult (interpretable)
+    validation: ValidationReport      # PRIMARY engine's LOO report
     predictions: list[dict]
     newly_finished: list[str]
     run_id: int | None
+    engine: str = "dc"                # which engine produced the predictions
+    comparison: EngineComparison | None = None
+    ml_fit: object | None = None
     notes: list[str] = field(default_factory=list)
 
 
@@ -60,13 +65,13 @@ class Pipeline:
             # balldontlie); fall back to any previously stored snapshot...
             rankings = self.db.load_rankings()
         if not rankings:
-            # ...and as a last resort to the bundled placeholder snapshot so the
-            # engine still has a rank signal. [TODO: replace with official CSV]
-            from . import fixtures
+            # ...and as a last resort to the CSV-aware resolver (FIFA_RANKING_CSV
+            # if set, else the bundled 48-team snapshot). [TODO: official CSV]
+            from .fifa_ranking import get_rankings
 
-            print("[ranking] sin ranking del proveedor ni en DB; uso snapshot "
-                  "placeholder (fixtures.fifa_ranking_snapshot). [TODO oficial]")
-            rankings = fixtures.fifa_ranking_snapshot()
+            print("[ranking] sin ranking del proveedor ni en DB; uso resolver "
+                  "(FIFA_RANKING_CSV o snapshot placeholder). [TODO oficial]")
+            rankings = get_rankings()
         if rankings:
             self.db.save_rankings(rankings)
         matches = self.provider.get_matches()
@@ -85,29 +90,65 @@ class Pipeline:
             m.is_finished and m.stats.xg_for is not None for m in matches
         ) else "full"
 
-        # 3. evidence-based variable selection
+        # 3. evidence-based variable selection (drives the Dixon-Coles engine)
         selection = select_covariates(matches, rankings)
 
-        # 4. single-MLE fit on selected covariates
-        model = DixonColesModel(selection.selected)
-        fit = model.fit(matches, rankings)
+        # 4. fit the interpretable Dixon-Coles engine (Wald weights) ...
+        dc_model = DixonColesModel(selection.selected)
+        fit = dc_model.fit(matches, rankings)
 
-        # 5. honest re-validation
-        validation = leave_one_out(matches, rankings, selection.selected,
-                                   n_sims=min(n_sims, 20_000))
+        # 5. honest engine comparison: DC vs ML (gradient boosting) via LOO
+        comparison = compare_engines(matches, rankings, selection.selected,
+                                     n_sims=min(n_sims, 12_000))
+        notes.extend(comparison.notes)
 
-        # 6. log the run
-        run_id = self.db.log_training_run(mode, fit, validation)
+        # 6. choose the PRIMARY engine. Default ENGINE=ml (user's choice);
+        #    ENGINE=auto picks the LOO winner; ENGINE=dc forces Dixon-Coles.
+        engine = self.cfg.engine
+        ml_model = None
+        ml_fit = None
+        if engine in ("ml", "auto"):
+            try:
+                from .ml_model import MLGoalModel
 
-        # 7. predictions for upcoming matches
+                ml_model = MLGoalModel()
+                ml_fit = ml_model.fit(matches, rankings)
+            except Exception as e:  # degrade to DC if ML can't fit
+                notes.append(f"ML engine unavailable ({e}); using Dixon-Coles.")
+                engine = "dc"
+        if engine == "auto":
+            engine = comparison.winner if comparison.winner != "tie" else "dc"
+
+        if engine == "ml" and ml_model is not None:
+            primary_model = ml_model
+            validation = comparison.ml
+        else:
+            engine = "dc"
+            primary_model = dc_model
+            validation = comparison.dc
+
+        # 7. log the run (DC weights + primary engine metrics + comparison)
+        extra = {
+            "engine": engine,
+            "dc_log_loss": comparison.dc.log_loss,
+            "ml_log_loss": comparison.ml.log_loss,
+            "dc_accuracy": comparison.dc.accuracy,
+            "ml_accuracy": comparison.ml.accuracy,
+            "winner": comparison.winner,
+        }
+        run_id = self.db.log_training_run(mode, fit, validation, engine=engine,
+                                          extra_metrics=extra)
+
+        # 8. predictions for upcoming matches with the PRIMARY engine
         predictions: list[dict] = []
         if generate_predictions:
-            predictions = self._predict_upcoming(model, matches, n_sims)
+            predictions = self._predict_upcoming(primary_model, matches, n_sims)
 
         return PipelineResult(
             mode=mode, selection=selection, fit=fit, validation=validation,
             predictions=predictions, newly_finished=[m.provider_id for m in newly],
-            run_id=run_id, notes=notes,
+            run_id=run_id, engine=engine, comparison=comparison, ml_fit=ml_fit,
+            notes=notes,
         )
 
     def _predict_upcoming(self, model: DixonColesModel, matches: list[Match],

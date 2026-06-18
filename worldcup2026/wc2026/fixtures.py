@@ -35,11 +35,12 @@ _RANK_TABLE: list[tuple[str, int]] = [
 
 
 def fifa_ranking_snapshot() -> list[FifaRank]:
-    """Return the (placeholder) FIFA ranking. as_of marks it clearly."""
-    return [
-        FifaRank(team=t, rank=r, points=None, as_of="SYNTHETIC-2026")
-        for t, r in _RANK_TABLE
-    ]
+    """Return the FIFA ranking. Delegates to the dedicated resolver, which
+    prefers a CSV (FIFA_RANKING_CSV) and falls back to the bundled snapshot
+    covering the 48-team field. Kept here for backwards-compatible imports."""
+    from .fifa_ranking import get_rankings
+
+    return get_rankings()
 
 
 def rank_strength(rank: int) -> float:
@@ -62,7 +63,8 @@ def synthetic_world_cup(with_xg: bool = False, seed: int = 2026) -> list[Match]:
     (the "already played" matches the backtest uses); the rest are SCHEDULED.
     """
     rng = np.random.default_rng(seed)
-    ranks = {fr.team: fr.rank for fr in fifa_ranking_snapshot()}
+    # Use the local clean table (no alias duplicates) for the synthetic demo.
+    ranks = {t: r for t, r in _RANK_TABLE}
     teams = list(ranks.keys())
 
     MU, HOME_ADV, BETA = 0.05, 0.20, 0.55  # "true" DGP params (unknown to model)

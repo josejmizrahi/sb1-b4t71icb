@@ -31,8 +31,20 @@ def render_report(result: PipelineResult, path: str = "reports/report.html") -> 
     import os
 
     os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+    cmp = result.comparison
     payload = {
         "mode": result.mode,
+        "engine": result.engine,
+        "comparison": None if cmp is None else {
+            "winner": cmp.winner,
+            "dc": {"accuracy": cmp.dc.accuracy, "log_loss": cmp.dc.log_loss,
+                   "brier": cmp.dc.brier, "beats": cmp.dc.beats_all_baselines},
+            "ml": {"accuracy": cmp.ml.accuracy, "log_loss": cmp.ml.log_loss,
+                   "brier": cmp.ml.brier, "beats": cmp.ml.beats_all_baselines},
+            "notes": cmp.notes,
+        },
+        "ml_importance": (None if result.ml_fit is None
+                          else result.ml_fit.importances[:12]),
         "selection": {
             "selected": result.selection.selected,
             "dropped": result.selection.dropped,
@@ -97,8 +109,30 @@ const esc = s => String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt
 let H='';
 H += `<h1>Predictor Mundial 2026</h1><div class="mut">Generado ${esc(D.generated_at)} &middot; motor: <b>${D.mode==='full'?'COMPLETO (con xG)':'REDUCIDO (solo-FIFA)'}</b></div>`;
 H += D.mode==='full'
-  ? `<div class="banner full">Motor completo: usa xG y ranking FIFA.</div>`
-  : `<div class="banner reduced">MODO REDUCIDO: sin xG disponible. El motor usa solo el ranking FIFA. Techo de acierto 1X2 realista ~52-55%, no 80%.</div>`;
+  ? `<div class="banner full">Motor completo: usa xG y ranking FIFA. Motor primario: <b>${esc((D.engine||'dc').toUpperCase())}</b>.</div>`
+  : `<div class="banner reduced">MODO REDUCIDO: sin xG disponible. El motor usa solo el ranking FIFA. Techo de acierto 1X2 realista ~52-55%, no 80%. Motor primario: <b>${esc((D.engine||'dc').toUpperCase())}</b>.</div>`;
+
+// Engine comparison
+if(D.comparison){const c=D.comparison;
+  H+=`<h2>Comparacion de motores (out-of-sample, LOO)</h2><div class="card">
+      <table><tr><th>Motor</th><th>Acierto 1X2</th><th>Log-loss</th><th>Brier</th><th>&gt; baselines</th></tr>
+      <tr><td>Dixon-Coles</td><td>${pct(c.dc.accuracy)}</td><td>${f(c.dc.log_loss)}</td><td>${f(c.dc.brier)}</td><td class="${c.dc.beats?'sig':'nsig'}">${c.dc.beats?'si':'no'}</td></tr>
+      <tr><td>ML (Gradient Boosting)</td><td>${pct(c.ml.accuracy)}</td><td>${f(c.ml.log_loss)}</td><td>${f(c.ml.brier)}</td><td class="${c.ml.beats?'sig':'nsig'}">${c.ml.beats?'si':'no'}</td></tr>
+      </table>
+      <div class="small" style="margin-top:6px">Ganador por log-loss (menor=mejor): <b>${esc(c.winner.toUpperCase())}</b></div>`;
+  if(c.notes&&c.notes.length){H+=`<div class="small mut" style="margin-top:6px">`+c.notes.map(esc).join('<br>')+`</div>`;}
+  H+=`</div>`;
+}
+
+// ML feature importance
+if(D.ml_importance){
+  H+=`<h2>ML: importancia por permutacion <span class="mut small">(relativa; con muestra chica, caveat)</span></h2><div class="card"><div class="bars">`;
+  const mx=Math.max(...D.ml_importance.map(r=>Math.abs(r.importance)),1e-9);
+  for(const r of D.ml_importance){
+    H+=`<div><span class="lab" style="width:150px">${esc(r.feature)}</span><div class="bar" style="width:${Math.round(220*Math.abs(r.importance)/mx)}px"></div><span class="small mut">${f(r.importance,4)}</span></div>`;
+  }
+  H+=`</div></div>`;
+}
 
 // Validation
 const v=D.validation;

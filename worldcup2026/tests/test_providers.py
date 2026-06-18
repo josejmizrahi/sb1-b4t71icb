@@ -15,7 +15,7 @@ def _cfg(provider, **kw):
         data_provider=provider, football_data_api_key=None, api_football_key=None,
         sportmonks_token=None, balldontlie_key=None, storage_backend="sqlite",
         sqlite_path=":memory:", supabase_url=None, supabase_key=None,
-        poll_interval_hours=6, mc_simulations=1000,
+        poll_interval_hours=6, mc_simulations=1000, engine="ml",
     )
     base.update(kw)
     return Config(**base)
