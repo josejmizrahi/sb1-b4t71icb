@@ -419,13 +419,12 @@ class BalldontlieProvider(DataProvider):
             return {}, {}
         if not rows:
             return {}, {}
-        if self._players_cache is None:
-            try:
-                self._players_cache = {str(p.get("id")): self._player_name(p)
-                                       for p in self._get_all("/players")}
-            except Exception:
-                self._players_cache = {}
-        players = self._players_cache
+        # Only resolve names for players who actually contribute (scored or
+        # generated xG) -- via the /players id filter. Fetching ALL of /players
+        # pages through BALLDONTLIE's entire historical player table (huge).
+        needed = {str(r.get("player_id")) for r in rows
+                  if (r.get("goals") or 0) > 0 or (r.get("expected_goals") or 0) > 0}
+        players = self._fetch_player_names(needed)
 
         goals_by_match: dict[str, list[Goal]] = {}
         threats: dict[str, dict[str, float]] = {}
@@ -446,6 +445,24 @@ class BalldontlieProvider(DataProvider):
                 threats.setdefault(team, {})
                 threats[team][name] = threats[team].get(name, 0.0) + weight
         return goals_by_match, threats
+
+    def _fetch_player_names(self, ids: set[str]) -> dict[str, str]:
+        """Resolve player_id -> name for a specific set of ids via the /players
+        id filter, in chunks (avoids paging the entire global player table)."""
+        if self._players_cache is None:
+            self._players_cache = {}
+        ids = {i for i in ids if i and i not in self._players_cache}
+        id_list = sorted(ids)
+        for k in range(0, len(id_list), 80):
+            chunk = id_list[k:k + 80]
+            try:
+                body = self._request("/players",
+                                     {"player_ids[]": chunk, "per_page": 100})
+                for p in body.get("data", []):
+                    self._players_cache[str(p.get("id"))] = self._player_name(p)
+            except Exception:
+                continue
+        return self._players_cache
 
     def get_player_threats(self, competition: str = "WC") -> dict[str, dict[str, float]]:
         if self._player_threats is None:
