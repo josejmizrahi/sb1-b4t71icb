@@ -248,11 +248,18 @@ class BalldontlieProvider(DataProvider):
     BASE = "https://api.balldontlie.io/fifa/worldcup/v1"
 
     def __init__(self, api_key: str | None, fetch_shots: bool | None = None,
-                 fetch_player_goals: bool | None = None):
+                 fetch_player_goals: bool | None = None,
+                 min_request_interval: float = 0.0):
         if not api_key:
             raise ValueError("BALLDONTLIE_API_KEY is empty (see .env.example).")
         import os
         import requests
+
+        # Proactive spacing between requests (seconds). 0 = off. Set to ~13s for
+        # the trial tier (~5 req/min) to avoid 429s entirely (used by the
+        # offline snapshot refresh, not by fast CI builds).
+        self.min_request_interval = min_request_interval
+        self._last_request_ts = 0.0
 
         # Shot-by-shot data (goal minutes) is heavy and, under the ~5 req/min
         # trial tier, very slow to paginate. Off by default; xG and all match
@@ -281,6 +288,11 @@ class BalldontlieProvider(DataProvider):
         import time
 
         for attempt in range(max_retries):
+            if self.min_request_interval > 0:
+                wait = self.min_request_interval - (time.time() - self._last_request_ts)
+                if wait > 0:
+                    time.sleep(wait)
+            self._last_request_ts = time.time()
             resp = self._session.get(f"{self.BASE}{path}", params=params,
                                      timeout=30)
             if resp.status_code == 429:

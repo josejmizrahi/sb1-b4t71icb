@@ -24,7 +24,11 @@ def main() -> int:
     if not key:
         print("BALLDONTLIE_API_KEY not set; cannot refresh.")
         return 1
-    prov = BalldontlieProvider(key, fetch_player_goals=True)
+    # Pace requests (~13s apart) to stay under the trial's ~5 req/min and avoid
+    # 429 storms, so the full player fetch completes deterministically.
+    interval = float(os.environ.get("BDL_REQUEST_INTERVAL", "13"))
+    prov = BalldontlieProvider(key, fetch_player_goals=True,
+                               min_request_interval=interval)
     threats = prov.get_player_threats()
     if not threats:
         print("No player threats fetched (rate limit or no data).")
