@@ -3,44 +3,57 @@ scorer prediction.
 
 Run this when new matches have been played (e.g. after a matchday):
 
-    BALLDONTLIE_API_KEY=... python -m wc2026.refresh_threats
+    python -m wc2026.refresh_threats                 # from openfootball (free)
+    SOURCE=balldontlie BALLDONTLIE_API_KEY=... python -m wc2026.refresh_threats
 
-It pulls /player_match_stats + /players from BALLDONTLIE and writes
-data/player_threats.json. The page/pipeline then reads this snapshot instead of
-hitting the slow, rate-limited player API on every CI build.
+Default source is openfootball, which carries the REAL goal scorers (names) for
+each played match -- free, no key, no rate limit. It writes data/player_threats.json
+keyed by NORMALIZED team name, so the page/pipeline (whatever provider it uses)
+can look it up. BALLDONTLIE mode weights by per-player xG instead of goal counts.
 """
 from __future__ import annotations
 
 import json
 import os
 
-from .data_provider import BalldontlieProvider
+from .teamnames import normalize
 
 OUT = os.path.join(os.path.dirname(__file__), "data", "player_threats.json")
 
 
-def main() -> int:
+def _from_openfootball() -> dict[str, dict[str, float]]:
+    from .data_provider import OpenFootballProvider
+    from .temporal import build_scorer_threats
+
+    matches = OpenFootballProvider().get_matches()
+    raw = build_scorer_threats(matches)          # {team: {scorer: goals}}
+    return {normalize(team): players for team, players in raw.items()}
+
+
+def _from_balldontlie() -> dict[str, dict[str, float]]:
+    from .data_provider import BalldontlieProvider
+
     key = os.environ.get("BALLDONTLIE_API_KEY")
-    if not key:
-        print("BALLDONTLIE_API_KEY not set; cannot refresh.")
-        return 1
-    # Pace requests (~13s apart) to stay under the trial's ~5 req/min and avoid
-    # 429 storms, so the full player fetch completes deterministically.
-    interval = float(os.environ.get("BDL_REQUEST_INTERVAL", "13"))
+    interval = float(os.environ.get("BDL_REQUEST_INTERVAL", "1"))
     prov = BalldontlieProvider(key, fetch_player_goals=True,
                                min_request_interval=interval)
-    threats = prov.get_player_threats()
+    raw = prov.get_player_threats()
+    return {normalize(team): players for team, players in raw.items()}
+
+
+def main() -> int:
+    source = os.environ.get("SOURCE", "openfootball").lower()
+    threats = _from_balldontlie() if source == "balldontlie" else _from_openfootball()
     if not threats:
-        print("No player threats fetched (rate limit or no data).")
+        print(f"No player threats from {source}.")
         return 2
-    os.makedirs(os.path.dirname(OUT), exist_ok=True)
-    # round weights to keep the file small
     rounded = {team: {p: round(w, 3) for p, w in players.items()}
                for team, players in threats.items()}
+    os.makedirs(os.path.dirname(OUT), exist_ok=True)
     with open(OUT, "w", encoding="utf-8") as f:
         json.dump(rounded, f, ensure_ascii=False, indent=0, sort_keys=True)
-    n_players = sum(len(v) for v in rounded.values())
-    print(f"Wrote {OUT}: {len(rounded)} teams, {n_players} players.")
+    n = sum(len(v) for v in rounded.values())
+    print(f"Wrote {OUT} from {source}: {len(rounded)} teams, {n} players.")
     return 0
 
 

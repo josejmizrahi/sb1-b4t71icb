@@ -73,3 +73,13 @@ def test_mock_provider_supports_xg_flag():
     # default mock = reduced (no xG); explicit flag flips it
     assert MockProvider(supports_xg=False).supports_xg is False
     assert MockProvider(supports_xg=True).supports_xg is True
+
+
+def test_team_name_normalize_aliases():
+    from wc2026.teamnames import normalize, normalize_keys
+    assert normalize("Czech Republic") == normalize("Czechia")
+    assert normalize("USA") == normalize("United States")
+    assert normalize("Türkiye") == normalize("Turkey")
+    assert normalize("Bosnia & Herzegovina") == normalize("Bosnia and Herzegovina")
+    out = normalize_keys({"Czech Republic": {"X": 1.0}})
+    assert "czechia" in out
