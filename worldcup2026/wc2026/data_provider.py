@@ -248,11 +248,18 @@ class BalldontlieProvider(DataProvider):
     BASE = "https://api.balldontlie.io/fifa/worldcup/v1"
 
     def __init__(self, api_key: str | None, fetch_shots: bool | None = None,
-                 fetch_player_goals: bool | None = None):
+                 fetch_player_goals: bool | None = None,
+                 min_request_interval: float = 0.0):
         if not api_key:
             raise ValueError("BALLDONTLIE_API_KEY is empty (see .env.example).")
         import os
         import requests
+
+        # Proactive spacing between requests (seconds). 0 = off. Set to ~13s for
+        # the trial tier (~5 req/min) to avoid 429s entirely (used by the
+        # offline snapshot refresh, not by fast CI builds).
+        self.min_request_interval = min_request_interval
+        self._last_request_ts = 0.0
 
         # Shot-by-shot data (goal minutes) is heavy and, under the ~5 req/min
         # trial tier, very slow to paginate. Off by default; xG and all match
@@ -281,6 +288,11 @@ class BalldontlieProvider(DataProvider):
         import time
 
         for attempt in range(max_retries):
+            if self.min_request_interval > 0:
+                wait = self.min_request_interval - (time.time() - self._last_request_ts)
+                if wait > 0:
+                    time.sleep(wait)
+            self._last_request_ts = time.time()
             resp = self._session.get(f"{self.BASE}{path}", params=params,
                                      timeout=30)
             if resp.status_code == 429:
@@ -407,13 +419,12 @@ class BalldontlieProvider(DataProvider):
             return {}, {}
         if not rows:
             return {}, {}
-        if self._players_cache is None:
-            try:
-                self._players_cache = {str(p.get("id")): self._player_name(p)
-                                       for p in self._get_all("/players")}
-            except Exception:
-                self._players_cache = {}
-        players = self._players_cache
+        # Only resolve names for players who actually contribute (scored or
+        # generated xG) -- via the /players id filter. Fetching ALL of /players
+        # pages through BALLDONTLIE's entire historical player table (huge).
+        needed = {str(r.get("player_id")) for r in rows
+                  if (r.get("goals") or 0) > 0 or (r.get("expected_goals") or 0) > 0}
+        players = self._fetch_player_names(needed)
 
         goals_by_match: dict[str, list[Goal]] = {}
         threats: dict[str, dict[str, float]] = {}
@@ -434,6 +445,24 @@ class BalldontlieProvider(DataProvider):
                 threats.setdefault(team, {})
                 threats[team][name] = threats[team].get(name, 0.0) + weight
         return goals_by_match, threats
+
+    def _fetch_player_names(self, ids: set[str]) -> dict[str, str]:
+        """Resolve player_id -> name for a specific set of ids via the /players
+        id filter, in chunks (avoids paging the entire global player table)."""
+        if self._players_cache is None:
+            self._players_cache = {}
+        ids = {i for i in ids if i and i not in self._players_cache}
+        id_list = sorted(ids)
+        for k in range(0, len(id_list), 80):
+            chunk = id_list[k:k + 80]
+            try:
+                body = self._request("/players",
+                                     {"player_ids[]": chunk, "per_page": 100})
+                for p in body.get("data", []):
+                    self._players_cache[str(p.get("id"))] = self._player_name(p)
+            except Exception:
+                continue
+        return self._players_cache
 
     def get_player_threats(self, competition: str = "WC") -> dict[str, dict[str, float]]:
         if self._player_threats is None:

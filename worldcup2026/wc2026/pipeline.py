@@ -32,6 +32,22 @@ from .validation import (
 from .types import Match
 
 
+def _load_committed_threats() -> dict[str, dict[str, float]]:
+    """Load the committed per-team player-threat snapshot (data/player_threats.json).
+    Lets the live page show real first-goal scorers without hammering the slow,
+    rate-limited player API on every CI build."""
+    import json
+    import os
+
+    path = os.path.join(os.path.dirname(__file__), "data", "player_threats.json")
+    try:
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+        return data if isinstance(data, dict) else {}
+    except Exception:
+        return {}
+
+
 def compute_standings(matches: list[Match]) -> list[dict]:
     """Group points/standings tallied directly from finished results (3-1-0).
     No API needed -- works for any provider that supplies group + scores."""
@@ -188,6 +204,12 @@ class Pipeline:
             player_threats = self.provider.get_player_threats()
         except Exception:
             player_threats = {}
+        if not player_threats:
+            # live player fetch is slow/unavailable (e.g. trial rate limit in CI);
+            # fall back to a committed snapshot so real scorers still show.
+            player_threats = _load_committed_threats()
+        from .teamnames import normalize_keys
+        player_threats = normalize_keys(player_threats)   # match across providers
 
         # 8. predictions for upcoming matches with the PRIMARY engine
         predictions: list[dict] = []
@@ -226,10 +248,12 @@ class Pipeline:
     def _predict_upcoming(self, model: DixonColesModel, matches: list[Match],
                           n_sims: int, player_threats: dict | None = None) -> list[dict]:
         from .temporal import build_scorer_threats
+        from .teamnames import normalize, normalize_keys
 
         # Prefer real-lineup threats (xG-weighted squad that played); fall back
         # to scorers aggregated from goals when the provider has no player data.
-        scorer_threats = player_threats or build_scorer_threats(matches)
+        scorer_threats = player_threats or normalize_keys(
+            build_scorer_threats(matches))
         out = []
         for m in matches:
             if m.is_finished:
@@ -243,8 +267,8 @@ class Pipeline:
                 continue
             fg = predict_first_goal(
                 pred.lam_home, pred.lam_away,
-                home_xi_threat=scorer_threats.get(m.home_team),
-                away_xi_threat=scorer_threats.get(m.away_team),
+                home_xi_threat=scorer_threats.get(normalize(m.home_team)),
+                away_xi_threat=scorer_threats.get(normalize(m.away_team)),
                 home_team=m.home_team, away_team=m.away_team,
             )
             out.append({
