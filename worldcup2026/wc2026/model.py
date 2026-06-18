@@ -56,11 +56,26 @@ def _shrunk_mean(values: list[float], prior: float, k: float = SHRINKAGE_K) -> f
     return (n * float(np.mean(values)) + k * prior) / (n + k)
 
 
+def _load_elo() -> dict[str, float]:
+    import json
+    import os
+
+    path = os.path.join(os.path.dirname(__file__), "data", "elo_ratings.json")
+    try:
+        with open(path, encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+
 @dataclass
 class TeamValues:
     """All per-team observable values used as covariates, with shrinkage applied
     where the sample is tiny."""
     rank_strength: dict[str, float]
+    elo_strength: dict[str, float]   # standardized World Football Elo (best prior)
+    has_elo: bool
+    opp_adj_attack: dict[str, float] # goals scored above expectation vs opponent
     goal_attack: dict[str, float]    # shrunk mean goals scored (works w/o xG)
     goal_defense: dict[str, float]   # shrunk mean goals conceded (lower=better)
     xg_attack: dict[str, float]      # shrunk mean xG for
@@ -86,6 +101,22 @@ def build_team_values(matches: list[Match], rankings: list[FifaRank]) -> TeamVal
         mean_rs = float(np.mean(list(rs.values())))
         rs = {t: v - mean_rs for t, v in rs.items()}
 
+    # World Football Elo: a continuous, recency-weighted strength measure that
+    # already encodes ~12 months of form (qualifiers + friendlies) and predicts
+    # better than the ordinal FIFA rank. Standardized per 100 Elo, centred.
+    from .teamnames import normalize
+
+    elo_map = _load_elo()
+    elo_raw = {t: elo_map.get(normalize(t)) for t in teams}
+    present = [v for v in elo_raw.values() if v is not None]
+    # Use Elo if we have it for a reasonable number of real teams. (Don't gate on
+    # the fraction of `teams`: the fixture list includes TBD knockout slots like
+    # "1A"/"2B" that have no Elo and would dilute the ratio.)
+    has_elo = len(present) >= 8
+    mean_elo = float(np.mean(present)) if present else 1500.0
+    es = {t: ((elo_raw[t] if elo_raw[t] is not None else mean_elo) - mean_elo) / 100.0
+          for t in teams}
+
     has_xg = any(
         m.is_finished and m.stats.xg_for is not None for m in matches
     )
@@ -99,6 +130,7 @@ def build_team_values(matches: list[Match], rankings: list[FifaRank]) -> TeamVal
     raw_sot: dict[str, list[float]] = {t: [] for t in teams}
     raw_pacc: dict[str, list[float]] = {t: [] for t in teams}
 
+    gf_vs_opp: list[tuple[str, float, float]] = []   # (team, goals_for, opp_elo)
     for m in matches:
         if not m.is_finished:
             continue
@@ -109,8 +141,10 @@ def build_team_values(matches: list[Match], rankings: list[FifaRank]) -> TeamVal
             # actual goals are observable even without xG -> real form signal
             gf = m.home_goals if side == "home" else m.away_goals
             ga = m.away_goals if side == "home" else m.home_goals
+            opp = m.away_team if side == "home" else m.home_team
             raw_gf[team].append(float(gf))
             raw_ga[team].append(float(ga))
+            gf_vs_opp.append((team, float(gf), es.get(opp, 0.0)))
             if has_xg and s.xg_for is not None:
                 xf = s.xg_for if side == "home" else s.xg_against
                 xa = s.xg_against if side == "home" else s.xg_for
@@ -133,8 +167,27 @@ def build_team_values(matches: list[Match], rankings: list[FifaRank]) -> TeamVal
         prior = float(np.mean(allvals)) if allvals else fallback
         return {t: _shrunk_mean(lst, prior) for t, lst in raw.items()}
 
+    # opponent-adjusted attack: goals scored ABOVE what an average team would
+    # score against that opponent (regress goals on opponent Elo, take residual).
+    # So 5 goals vs a weak side counts less than 2 vs a strong one. Shrunk.
+    opp_adj = {t: 0.0 for t in teams}
+    if len(gf_vs_opp) >= 6:
+        X = np.array([o for _, _, o in gf_vs_opp])
+        Yg = np.array([gv for _, gv, _ in gf_vs_opp])
+        if np.std(X) > 1e-6:
+            slope, intercept = np.polyfit(X, Yg, 1)
+        else:
+            slope, intercept = 0.0, float(np.mean(Yg))
+        resid: dict[str, list[float]] = {t: [] for t in teams}
+        for t, gv, o in gf_vs_opp:
+            resid[t].append(gv - (intercept + slope * o))
+        opp_adj = {t: _shrunk_mean(lst, 0.0) for t, lst in resid.items()}
+
     return TeamValues(
         rank_strength=rs,
+        elo_strength=es,
+        has_elo=has_elo,
+        opp_adj_attack=opp_adj,
         goal_attack=shrink_table(raw_gf, 1.2),
         goal_defense=shrink_table(raw_ga, 1.2),
         xg_attack=shrink_table(raw_att, 1.2),
@@ -149,7 +202,9 @@ def build_team_values(matches: list[Match], rankings: list[FifaRank]) -> TeamVal
 # Candidate covariates offered to the variable-selection layer. The engine only
 # uses the subset that survives selection (and the <=1-per-10 cap).
 CANDIDATE_COVARIATES = [
+    "elo_strength",       # best strength prior (Elo: strength + recent form)
     "rank_strength",
+    "opp_adj_attack",     # opponent-adjusted goal form (works w/o xG)
     "goal_attack",        # available even in reduced mode (no xG)
     "xg_attack",
     "possession",

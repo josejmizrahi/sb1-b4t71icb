@@ -14,11 +14,12 @@ def test_selection_respects_cap(matches, rankings):
 
 
 def test_reduced_mode_drops_xg_covariates(matches, rankings):
-    """No xG in the data -> xG-dependent covariates must not be candidates."""
+    """No xG in the data -> xG-dependent covariates must not be candidates, and
+    a strength prior (Elo when available, else FIFA rank) drives the engine."""
     sel = select_covariates(matches, rankings)
     for c in ("xg_attack", "possession", "shots_on_target", "pass_accuracy"):
         assert c not in sel.candidates
-    assert "rank_strength" in sel.candidates
+    assert "elo_strength" in sel.selected or "rank_strength" in sel.selected
 
 
 def test_full_mode_can_demonstrate_redundancy(rankings):
