@@ -237,11 +237,20 @@ class BalldontlieProvider(DataProvider):
     supports_xg = True
     BASE = "https://api.balldontlie.io/fifa/worldcup/v1"
 
-    def __init__(self, api_key: str | None):
+    def __init__(self, api_key: str | None, fetch_shots: bool | None = None):
         if not api_key:
             raise ValueError("BALLDONTLIE_API_KEY is empty (see .env.example).")
+        import os
         import requests
 
+        # Shot-by-shot data (goal minutes / scorer) is heavy and, under the
+        # ~5 req/min trial tier, very slow to paginate. Off by default; xG and
+        # all match stats come from /team_match_stats regardless. Enable with
+        # BALLDONTLIE_FETCH_SHOTS=true once on a higher rate limit.
+        if fetch_shots is None:
+            fetch_shots = (os.environ.get("BALLDONTLIE_FETCH_SHOTS", "false")
+                           .strip().lower() in {"1", "true", "yes"})
+        self.fetch_shots = fetch_shots
         self._session = requests.Session()
         self._session.headers.update({"Authorization": api_key})
 
@@ -301,13 +310,15 @@ class BalldontlieProvider(DataProvider):
         except Exception as e:  # stats are optional; matches still usable
             warnings.warn(f"team_match_stats unavailable ({e}); xG omitted.",
                           stacklevel=2)
-        # shot-level data for goal minutes (shot_type == goal) — best effort
+        # shot-level data for goal minutes (shot_type == goal) — optional and
+        # off by default because it is slow under the trial rate limit.
         shots_by_match: dict[str, list[dict]] = {}
-        try:
-            for sh in self._get_all("/match_shots"):
-                shots_by_match.setdefault(str(sh.get("match_id")), []).append(sh)
-        except Exception:
-            pass  # [TODO] confirm exact goal flag in match_shots
+        if self.fetch_shots:
+            try:
+                for sh in self._get_all("/match_shots"):
+                    shots_by_match.setdefault(str(sh.get("match_id")), []).append(sh)
+            except Exception:
+                pass  # [TODO] confirm exact goal flag in match_shots
 
         out: list[Match] = []
         for m in raw:
