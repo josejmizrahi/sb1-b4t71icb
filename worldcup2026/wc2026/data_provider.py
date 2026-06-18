@@ -41,6 +41,15 @@ class DataProvider(abc.ABC):
         from get_matches; vendors with a dedicated endpoint can override."""
         return [m for m in self.get_matches(competition) if m.home_xi and m.away_xi]
 
+    def get_standings(self, competition: str = "WC") -> list[dict]:
+        """Group standings/points. Default: none (vendors override)."""
+        return []
+
+    def get_player_threats(self, competition: str = "WC") -> dict[str, dict[str, float]]:
+        """{team: {player: attacking_threat}} from the real lineups that played.
+        Default: empty (the pipeline falls back to goal scorers)."""
+        return {}
+
 
 # ---------------------------------------------------------------------------
 # football-data.org  (FREE tier; no xG)
@@ -208,6 +217,7 @@ class OpenFootballProvider(DataProvider):
                 utc_date=f"{m.get('date','')}T{m.get('time','00:00')}",
                 competition="WC", home_team=home, away_team=away,
                 status=status, home_goals=hg, away_goals=ag, goals=goals,
+                group=m.get("group") or m.get("round"),
             ))
         return out
 
@@ -237,20 +247,31 @@ class BalldontlieProvider(DataProvider):
     supports_xg = True
     BASE = "https://api.balldontlie.io/fifa/worldcup/v1"
 
-    def __init__(self, api_key: str | None, fetch_shots: bool | None = None):
+    def __init__(self, api_key: str | None, fetch_shots: bool | None = None,
+                 fetch_player_goals: bool | None = None):
         if not api_key:
             raise ValueError("BALLDONTLIE_API_KEY is empty (see .env.example).")
         import os
         import requests
 
-        # Shot-by-shot data (goal minutes / scorer) is heavy and, under the
-        # ~5 req/min trial tier, very slow to paginate. Off by default; xG and
-        # all match stats come from /team_match_stats regardless. Enable with
+        # Shot-by-shot data (goal minutes) is heavy and, under the ~5 req/min
+        # trial tier, very slow to paginate. Off by default; xG and all match
+        # stats come from /team_match_stats regardless. Enable with
         # BALLDONTLIE_FETCH_SHOTS=true once on a higher rate limit.
         if fetch_shots is None:
             fetch_shots = (os.environ.get("BALLDONTLIE_FETCH_SHOTS", "false")
                            .strip().lower() in {"1", "true", "yes"})
         self.fetch_shots = fetch_shots
+        # Player goal scorers (real names for the scorer prediction) come from
+        # /player_match_stats + /players -- lighter than /match_shots. On by
+        # default; disable with BALLDONTLIE_FETCH_PLAYER_GOALS=false.
+        if fetch_player_goals is None:
+            fetch_player_goals = (os.environ.get(
+                "BALLDONTLIE_FETCH_PLAYER_GOALS", "true")
+                .strip().lower() in {"1", "true", "yes"})
+        self.fetch_player_goals = fetch_player_goals
+        self._player_threats: dict[str, dict[str, float]] | None = None
+        self._players_cache: dict[str, str] | None = None
         self._session = requests.Session()
         self._session.headers.update({"Authorization": api_key})
 
@@ -320,6 +341,11 @@ class BalldontlieProvider(DataProvider):
             except Exception:
                 pass  # [TODO] confirm exact goal flag in match_shots
 
+        # real goal scorers + per-team attacking threat from the lineups that
+        # actually played (player stats) -> for the scorer prediction
+        team_names = self._team_name_map(raw)
+        goals_by_match, self._player_threats = self._build_player_data(team_names)
+
         out: list[Match] = []
         for m in raw:
             mid = str(m.get("id"))
@@ -329,6 +355,9 @@ class BalldontlieProvider(DataProvider):
                                    "COMPLETED"} or (
                 home_g is not None and away_g is not None and status not in
                 {"SCHEDULED", "NOT_STARTED", ""})
+            goals = goals_by_match.get(mid)
+            if not goals and self.fetch_shots:
+                goals = self._build_goals(shots_by_match.get(mid, []), match_home=mid)
             match = Match(
                 provider_id=mid,
                 utc_date=m.get("datetime") or m.get("date") or "",
@@ -339,10 +368,78 @@ class BalldontlieProvider(DataProvider):
                 home_goals=home_g if finished else None,
                 away_goals=away_g if finished else None,
                 stats=self._build_stats(team_stats.get(mid, [])),
-                goals=self._build_goals(shots_by_match.get(mid, []), match_home=mid),
+                goals=goals or [],
+                group=m.get("group") or m.get("group_name"),
             )
             out.append(match)
         return out
+
+    @staticmethod
+    def _team_name_map(raw_matches: list[dict]) -> dict[str, str]:
+        names: dict[str, str] = {}
+        for m in raw_matches:
+            for side in ("home_team", "away_team"):
+                t = m.get(side)
+                if isinstance(t, dict) and t.get("id") is not None:
+                    names[str(t["id"])] = t.get("name") or t.get("abbreviation") or ""
+        return names
+
+    @staticmethod
+    def _player_name(p: dict) -> str:
+        if p.get("name"):
+            return p["name"]
+        parts = [p.get("first_name"), p.get("last_name")]
+        return " ".join(x for x in parts if x).strip() or str(p.get("id"))
+
+    def _build_player_data(self, team_names: dict[str, str]
+                           ) -> tuple[dict[str, list[Goal]], dict[str, dict[str, float]]]:
+        """From /player_match_stats build (a) real goal scorers per match and
+        (b) per-team attacking threat for everyone who actually played (weighted
+        by xG + goals). Names resolved via /players. Minute is unknown without
+        /match_shots, so Goals carry minute=0 (used only for scorer aggregation)."""
+        if not self.fetch_player_goals:
+            return {}, {}
+        try:
+            rows = self._get_all("/player_match_stats")
+        except Exception as e:
+            warnings.warn(f"player_match_stats unavailable ({e}); no scorers.",
+                          stacklevel=2)
+            return {}, {}
+        if not rows:
+            return {}, {}
+        if self._players_cache is None:
+            try:
+                self._players_cache = {str(p.get("id")): self._player_name(p)
+                                       for p in self._get_all("/players")}
+            except Exception:
+                self._players_cache = {}
+        players = self._players_cache
+
+        goals_by_match: dict[str, list[Goal]] = {}
+        threats: dict[str, dict[str, float]] = {}
+        for r in rows:
+            name = players.get(str(r.get("player_id")), str(r.get("player_id")))
+            team = team_names.get(str(r.get("team_id")), str(r.get("team_id")))
+            goals = int(r.get("goals") or 0)
+            xg = float(r.get("expected_goals") or 0.0)
+            played = (r.get("minutes_played") or 0) > 0 or goals > 0
+            # scorers
+            mid = str(r.get("match_id"))
+            for _ in range(goals):
+                goals_by_match.setdefault(mid, []).append(
+                    Goal(minute=0, team=team, scorer=name))
+            # attacking threat (real lineups): xG + goals, accumulated per player
+            weight = xg + goals
+            if played and weight > 0:
+                threats.setdefault(team, {})
+                threats[team][name] = threats[team].get(name, 0.0) + weight
+        return goals_by_match, threats
+
+    def get_player_threats(self, competition: str = "WC") -> dict[str, dict[str, float]]:
+        if self._player_threats is None:
+            self.get_matches(competition)
+        return self._player_threats or {}
+
 
     @staticmethod
     def _build_stats(rows: list[dict]) -> MatchStats:

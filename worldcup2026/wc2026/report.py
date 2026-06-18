@@ -45,6 +45,8 @@ def render_report(result: PipelineResult, path: str = "reports/report.html") -> 
         },
         "ml_importance": (None if result.ml_fit is None
                           else result.ml_fit.importances[:12]),
+        "standings": result.standings or [],
+        "descriptive": result.descriptive or {},
         "selection": {
             "selected": result.selection.selected,
             "dropped": result.selection.dropped,
@@ -178,6 +180,22 @@ for(const r of D.wald){
 }
 H+=`</table></div>`;
 
+// Group standings
+if(D.standings && D.standings.length){
+  const byG={};
+  for(const s of D.standings){const g=s.group||'-'; (byG[g]=byG[g]||[]).push(s);}
+  H+=`<h2>Puntos por grupo</h2><div class="grid">`;
+  for(const g of Object.keys(byG).sort()){
+    const rows=byG[g].sort((a,b)=>(b.points||0)-(a.points||0)||((b.gd||0)-(a.gd||0)));
+    H+=`<div class="card"><b>Grupo ${esc(g)}</b><table>
+        <tr><th>Equipo</th><th>PJ</th><th>Pts</th><th>DG</th></tr>`;
+    for(const r of rows){H+=`<tr><td>${esc(r.team||'')}</td><td>${r.played??''}</td>
+        <td><b>${r.points??''}</b></td><td>${r.gd??''}</td></tr>`;}
+    H+=`</table></div>`;
+  }
+  H+=`</div>`;
+}
+
 // Predictions
 H+=`<h2>Predicciones por partido (${D.predictions.length})</h2><div class="grid">`;
 for(const p of D.predictions){
@@ -201,6 +219,18 @@ for(const p of D.predictions){
       (fg.likely_scorers||[]).slice(0,3).map(x=>`${esc(x.player)} (${pct(x.prob)})`).join(', ')+`</div></div>`;
 }
 H+=`</div>`;
+// Descriptive layer (stats NOT in the engine: possession, shots, passes)
+if(D.descriptive && Object.keys(D.descriptive).length){
+  const rows=Object.entries(D.descriptive).sort((a,b)=>b[1].xg_attack-a[1].xg_attack);
+  H+=`<h2>Capa descriptiva <span class="mut small">(promedios por equipo; NO entran al motor)</span></h2>
+      <div class="card"><div class="small mut">Posesion, tiros a puerta y precision de pase son utiles para leer el partido, pero el Lasso los descarta del motor por ser redundantes con el xG. Aqui visibles, fuera del predictor.</div>
+      <table><tr><th>Equipo</th><th>xG/p</th><th>Goles/p</th><th>Posesion%</th><th>Tiros p.</th><th>Pase%</th></tr>`;
+  for(const [t,s] of rows){H+=`<tr><td>${esc(t)}</td><td>${f(s.xg_attack,2)}</td>
+      <td>${f(s.goal_attack,2)}</td><td>${f(s.possession,1)}</td>
+      <td>${f(s.shots_on_target,1)}</td><td>${f(s.pass_accuracy,1)}</td></tr>`;}
+  H+=`</table></div>`;
+}
+
 H+=`<h2 class="mut">Nota metodologica</h2><div class="card small mut">
   La fuerza de cada seleccion es funcion de covariables observables (ranking FIFA, xG cuando existe),
   no parametros libres por equipo: con ~3 partidos por equipo no se pueden estimar ~2N ratings sin sobreajustar.

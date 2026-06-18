@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS matches (
     home_xi_json  TEXT,
     away_xi_json  TEXT,
     lineup_posted_at TEXT,
+    group_name    TEXT,
     updated_at    TEXT
 );
 CREATE TABLE IF NOT EXISTS goals (
@@ -92,19 +93,20 @@ class Database:
         self.conn.execute(
             """INSERT INTO matches (provider_id, utc_date, competition, home_team,
                  away_team, status, home_goals, away_goals, stats_json,
-                 home_xi_json, away_xi_json, lineup_posted_at, updated_at)
-               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
+                 home_xi_json, away_xi_json, lineup_posted_at, group_name, updated_at)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                ON CONFLICT(provider_id) DO UPDATE SET
                  utc_date=excluded.utc_date, status=excluded.status,
                  home_goals=excluded.home_goals, away_goals=excluded.away_goals,
                  stats_json=excluded.stats_json, home_xi_json=excluded.home_xi_json,
                  away_xi_json=excluded.away_xi_json,
                  lineup_posted_at=excluded.lineup_posted_at,
+                 group_name=excluded.group_name,
                  updated_at=excluded.updated_at""",
             (m.provider_id, m.utc_date, m.competition, m.home_team, m.away_team,
              m.status, m.home_goals, m.away_goals,
              json.dumps(m.stats.__dict__), json.dumps(m.home_xi),
-             json.dumps(m.away_xi), m.lineup_posted_at, _now()),
+             json.dumps(m.away_xi), m.lineup_posted_at, m.group, _now()),
         )
         self.conn.execute("DELETE FROM goals WHERE match_id=?", (m.provider_id,))
         for g in m.goals:
@@ -137,6 +139,7 @@ class Database:
                 home_xi=json.loads(r["home_xi_json"] or "[]"),
                 away_xi=json.loads(r["away_xi_json"] or "[]"),
                 lineup_posted_at=r["lineup_posted_at"],
+                group=r["group_name"],
             ))
         return out
 
