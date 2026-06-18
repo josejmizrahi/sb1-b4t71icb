@@ -1,4 +1,5 @@
 name: Publish report to GitHub Pages
+# Pages enabled (Source: GitHub Actions) — redeploy.
 
 on:
   push:
