@@ -47,6 +47,10 @@ jobs:
           # xG (full engine); otherwise it falls back to the free openfootball
           # provider (reduced, FIFA-only). No secret required for it to work.
           BALLDONTLIE_API_KEY: ${{ secrets.BALLDONTLIE_API_KEY }}
+          # Skip the slow per-player fetch in CI (trial rate limit makes it
+          # exceed the build window); first-goal scorers come from the committed
+          # snapshot (data/player_threats.json) instead.
+          BALLDONTLIE_FETCH_PLAYER_GOALS: "false"
         run: |
           if [ -n "$BALLDONTLIE_API_KEY" ]; then
             export DATA_PROVIDER=balldontlie
