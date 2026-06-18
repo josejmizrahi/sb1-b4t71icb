@@ -205,9 +205,16 @@ class FitResult:
 
 
 class DixonColesModel:
-    def __init__(self, covariates: list[str], rho_bound: float = 0.18):
+    def __init__(self, covariates: list[str], rho_bound: float = 0.18,
+                 neutral_venue: bool = True):
+        # The World Cup is played at neutral venues (except host nations), so by
+        # default we FIX home advantage at 0. Estimating it from a few matches
+        # picks up spurious noise (non-significant) and inflates every
+        # arbitrarily-designated "home" team. Set neutral_venue=False for a
+        # normal home/away competition.
         self.covariates = list(covariates)
         self.rho_bound = rho_bound
+        self.neutral_venue = neutral_venue
         self.team_values: Optional[TeamValues] = None
         self.fit_result: Optional[FitResult] = None
 
@@ -263,7 +270,8 @@ class DixonColesModel:
         x0 = np.zeros(3 + len(self.covariates))
         x0[0] = math.log(max(0.8, np.mean(
             [m.home_goals + m.away_goals for m in finished]) / 2))
-        bounds = [(-2, 2), (-1, 1), (-self.rho_bound, self.rho_bound)]
+        home_bounds = (0.0, 0.0) if self.neutral_venue else (-1.0, 1.0)
+        bounds = [(-2, 2), home_bounds, (-self.rho_bound, self.rho_bound)]
         bounds += [(-3, 3)] * len(self.covariates)
 
         res = minimize(

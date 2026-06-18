@@ -128,16 +128,16 @@ def select_covariates(matches: list[Match], rankings: list[FifaRank],
                       use_elasticnet: bool = True) -> SelectionReport:
     tv = build_team_values(matches, rankings)
     cands = list(candidates or CANDIDATE_COVARIATES)
+    # ALWAYS drop raw goal_attack from the engine: it is not opponent-adjusted
+    # (a 5-1 win over a minnow inflates it), so one noisy match can invert a
+    # correct ranking (e.g. Sweden over Netherlands). Confirmed OOS to hurt
+    # (simulate-j1). It stays available only as a descriptive covariate.
+    cands = [c for c in cands if c != "goal_attack"]
     # drop xG-derived covariates that have no data (reduced mode)
     if not tv.has_xg:
         xg_dependent = {"xg_attack", "xg_defense", "possession",
                         "shots_on_target", "pass_accuracy"}
         cands = [c for c in cands if c not in xg_dependent]
-    else:
-        # xG present: prefer xg_attack over raw goal_attack. Raw goals correlate
-        # mechanically in-sample but with ~1 match are noise; xG is the denoised
-        # attacking-form signal. (Confirmed OOS: goal_attack hurts, xG helps.)
-        cands = [c for c in cands if c != "goal_attack"]
 
     finished = [m for m in matches if m.is_finished]
     n = len(finished)

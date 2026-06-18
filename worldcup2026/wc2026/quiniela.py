@@ -95,7 +95,11 @@ def optimize_scoreline(M: np.ndarray, scoring=SCORING, restrict_outcome=None,
 def match_picks(pred: dict, scoring=SCORING) -> dict:
     """Full point-maximizing pick for one match + expected-points breakdown."""
     M = score_matrix(pred["lam_home"], pred["lam_away"], pred.get("rho", 0.0), MAXG)
-    prefer = (pred["lam_home"], pred["lam_away"])
+    # Lean toward the likely goleada ONLY when there is a clear favorite (big
+    # lambda gap); for even matches use the pure expected-points pick so we don't
+    # force every game to 2-1.
+    lam_gap = abs(pred["lam_home"] - pred["lam_away"])
+    prefer = (pred["lam_home"], pred["lam_away"]) if lam_gap >= 0.8 else None
     h, a, ep_score, br = optimize_scoreline(M, scoring, prefer=prefer)
 
     # first team to score: pick the more likely; EV = points * its probability
@@ -132,8 +136,7 @@ def match_picks(pred: dict, scoring=SCORING) -> dict:
     # (assumes you'd be in the <=10% that picked it). This is the climber's bet.
     ep_dog = total_ep
     dog_score = (h, a)
-    ud = optimize_scoreline(M, scoring, restrict_outcome=underdog_outcome,
-                            prefer=prefer)
+    ud = optimize_scoreline(M, scoring, restrict_outcome=underdog_outcome)
     if ud is not None:
         dog_score = (ud[0], ud[1])
         ep_dog = (ud[2] + ep_first_team + ep_first_scorer
