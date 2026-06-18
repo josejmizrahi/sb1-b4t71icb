@@ -16,9 +16,4 @@ venv/
 *.egg-info/
 
 # Generated reports
-**/reports/*.html
-
-# OS / editor
-.DS_Store
-.idea/
-.vscode/
+reports/*.html

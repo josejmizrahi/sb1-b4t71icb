@@ -1,0 +1,38 @@
+name: worldcup2026 tests
+
+on:
+  push:
+    paths:
+      - "worldcup2026/**"
+      - ".github/workflows/worldcup2026-tests.yml"
+  pull_request:
+    paths:
+      - "worldcup2026/**"
+      - ".github/workflows/worldcup2026-tests.yml"
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+    defaults:
+      run:
+        working-directory: worldcup2026
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run tests
+        run: python -m pytest -q
