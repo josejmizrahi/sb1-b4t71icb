@@ -76,6 +76,7 @@ class PipelineResult:
     ml_fit: object | None = None
     standings: list = field(default_factory=list)
     descriptive: dict = field(default_factory=dict)
+    variable_evidence: list = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
 
 
@@ -124,6 +125,9 @@ class Pipeline:
 
         # 3. evidence-based variable selection (drives the Dixon-Coles engine)
         selection = select_covariates(matches, rankings)
+        from .selection import compute_variable_evidence
+        variable_evidence = compute_variable_evidence(matches, rankings,
+                                                      selection.selected)
 
         # 4. fit the interpretable Dixon-Coles engine (Wald weights) ...
         dc_model = DixonColesModel(selection.selected)
@@ -194,7 +198,8 @@ class Pipeline:
             mode=mode, selection=selection, fit=fit, validation=validation,
             predictions=predictions, newly_finished=[m.provider_id for m in newly],
             run_id=run_id, engine=engine, comparison=comparison, ml_fit=ml_fit,
-            standings=standings, descriptive=descriptive, notes=notes,
+            standings=standings, descriptive=descriptive,
+            variable_evidence=variable_evidence, notes=notes,
         )
 
     @staticmethod

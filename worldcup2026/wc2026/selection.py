@@ -38,6 +38,81 @@ class SelectionReport:
     notes: list[str] = field(default_factory=list)
 
 
+def _partial_corr(a, b, ctrl):
+    """corr(a, b | ctrl): residualize a and b on ctrl (with intercept)."""
+    import numpy as np
+    from scipy.stats import pearsonr
+
+    X = np.c_[np.ones(len(ctrl)), ctrl]
+    ra = a - X @ np.linalg.lstsq(X, a, rcond=None)[0]
+    rb = b - X @ np.linalg.lstsq(X, b, rcond=None)[0]
+    if np.std(ra) < 1e-9 or np.std(rb) < 1e-9:
+        return 0.0, 1.0
+    r, p = pearsonr(ra, rb)
+    return float(r), float(p)
+
+
+def compute_variable_evidence(matches: list[Match], rankings: list[FifaRank],
+                              selected: list[str]) -> list[dict]:
+    """Per-match evidence for WHY each variable is in the engine or not:
+      - univariate correlation with the goal difference (the naive view),
+      - correlation with xG (the confounder),
+      - PARTIAL correlation with goals controlling for xG (the unique signal).
+    Only meaningful with xG present; returns [] in reduced mode."""
+    import numpy as np
+    from scipy.stats import pearsonr
+    from .fixtures import rank_strength
+
+    rank_map = {fr.team: fr.rank for fr in rankings}
+    gd, xg, series = [], [], {"possession": [], "pass_accuracy": [],
+                              "shots_on_target": [], "rank_strength": []}
+    for m in matches:
+        if not m.is_finished:
+            continue
+        s = m.stats
+        if s.xg_for is None or s.possession_home is None:
+            continue
+        gd.append(m.home_goals - m.away_goals)
+        xg.append(s.xg_for - s.xg_against)
+        series["possession"].append((s.possession_home or 0) - (s.possession_away or 0))
+        series["pass_accuracy"].append((s.pass_accuracy_home or 0) - (s.pass_accuracy_away or 0))
+        series["shots_on_target"].append((s.shots_on_target_home or 0) - (s.shots_on_target_away or 0))
+        series["rank_strength"].append(
+            rank_strength(rank_map.get(m.home_team, 100))
+            - rank_strength(rank_map.get(m.away_team, 100)))
+    n = len(gd)
+    if n < 5:
+        return []
+    gd = np.array(gd, float); xg = np.array(xg, float)
+    rows = []
+
+    def uni(v):
+        v = np.array(v, float)
+        if np.std(v) < 1e-9:
+            return 0.0, 1.0
+        r, p = pearsonr(v, gd)
+        return float(r), float(p)
+
+    # xG row (the engine's form signal): univariate only
+    r, p = uni(xg)
+    rows.append({"variable": "xg_attack", "r_uni": r, "p_uni": p,
+                 "r_with_xg": 1.0, "r_partial": r, "p_partial": p,
+                 "in_engine": "xg_attack" in selected})
+    for name in ("rank_strength", "shots_on_target", "possession", "pass_accuracy"):
+        v = np.array(series[name], float)
+        r_u, p_u = uni(v)
+        r_xg, _ = (1.0, 0.0) if name == "rank_strength" else (
+            pearsonr(v, xg) if np.std(v) > 1e-9 else (0.0, 1.0))
+        if name == "rank_strength":
+            r_pa, p_pa = r_u, p_u           # not an xG-derived stat
+        else:
+            r_pa, p_pa = _partial_corr(v, gd, xg)
+        rows.append({"variable": name, "r_uni": r_u, "p_uni": p_u,
+                     "r_with_xg": float(r_xg), "r_partial": r_pa,
+                     "p_partial": p_pa, "in_engine": name in selected})
+    return rows
+
+
 def _design(matches: list[Match], tv: TeamValues, covariates: list[str]):
     rows, y = [], []
     for m in matches:
