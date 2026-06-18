@@ -58,6 +58,11 @@ def select_covariates(matches: list[Match], rankings: list[FifaRank],
         xg_dependent = {"xg_attack", "xg_defense", "possession",
                         "shots_on_target", "pass_accuracy"}
         cands = [c for c in cands if c not in xg_dependent]
+    else:
+        # xG present: prefer xg_attack over raw goal_attack. Raw goals correlate
+        # mechanically in-sample but with ~1 match are noise; xG is the denoised
+        # attacking-form signal. (Confirmed OOS: goal_attack hurts, xG helps.)
+        cands = [c for c in cands if c != "goal_attack"]
 
     finished = [m for m in matches if m.is_finished]
     n = len(finished)

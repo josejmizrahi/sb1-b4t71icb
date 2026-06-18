@@ -139,7 +139,7 @@ class Database:
                 home_xi=json.loads(r["home_xi_json"] or "[]"),
                 away_xi=json.loads(r["away_xi_json"] or "[]"),
                 lineup_posted_at=r["lineup_posted_at"],
-                group=r["group_name"],
+                group=(r["group_name"] if "group_name" in r.keys() else None),
             ))
         return out
 
