@@ -180,6 +180,82 @@ def leave_one_out(matches: list[Match], rankings: list[FifaRank],
     )
 
 
+def simulate_matchday(matches: list[Match], rankings: list[FifaRank],
+                      covariates: list[str], n_sims: int = 15_000) -> list[dict]:
+    """Leave-one-out 'simulation' of the already-played matches: refit on the
+    others, predict the held-out one, and line the prediction up against the
+    REAL result. Honest because each match never informs its own prediction."""
+    finished = [m for m in matches if m.is_finished]
+    rows = []
+    for i, test in enumerate(finished):
+        train = [m for j, m in enumerate(finished) if j != i]
+        try:
+            model = DixonColesModel(covariates)
+            model.fit(train, rankings)
+            pred = predict_match(model, test.home_team, test.away_team,
+                                 n_sims=n_sims, seed=i)
+            pp = {"H": pred.prob_home, "D": pred.prob_draw, "A": pred.prob_away}
+            pscore = pred.most_likely_score
+        except Exception:
+            pp = {"H": 1/3, "D": 1/3, "A": 1/3}
+            pscore = (1, 1)
+        actual = actual_outcome(test)
+        predicted = max(pp, key=pp.get)
+        rows.append({
+            "home": test.home_team, "away": test.away_team,
+            "group": test.group,
+            "actual_score": (test.home_goals, test.away_goals),
+            "actual_outcome": actual,
+            "pred_score": tuple(pscore),
+            "pred_probs": pp,
+            "pred_outcome": predicted,
+            "correct": predicted == actual,
+            "p_actual": pp[actual],          # prob the model gave the real result
+        })
+    return rows
+
+
+@dataclass
+class IncrementalResult:
+    base_covariates: list[str]
+    base_log_loss: float
+    base_accuracy: float
+    variables: dict[str, dict]       # var -> {log_loss, accuracy, d_log_loss, d_acc, helps}
+    notes: list[str] = field(default_factory=list)
+
+
+def incremental_variable_analysis(matches: list[Match], rankings: list[FifaRank],
+                                  base: list[str], candidates: list[str],
+                                  n_sims: int = 8_000, n_boot: int = 300
+                                  ) -> IncrementalResult:
+    """For each candidate variable, measure whether adding it ON TOP of the base
+    engine improves OUT-OF-SAMPLE log-loss/accuracy (LOO). A variable is
+    'explanatory' only if it lowers log-loss out of sample -- otherwise it is
+    redundant or overfits. This is forward selection judged by real results."""
+    base_rep = leave_one_out(matches, rankings, base, n_sims=n_sims,
+                             n_boot=n_boot, engine=dc_engine_factory(base))
+    out: dict[str, dict] = {}
+    for c in candidates:
+        if c in base:
+            continue
+        rep = leave_one_out(matches, rankings, base + [c], n_sims=n_sims,
+                            n_boot=n_boot, engine=dc_engine_factory(base + [c]))
+        d_ll = rep.log_loss - base_rep.log_loss      # negative = better
+        out[c] = {
+            "log_loss": rep.log_loss,
+            "accuracy": rep.accuracy,
+            "d_log_loss": d_ll,
+            "d_acc": rep.accuracy - base_rep.accuracy,
+            "helps": bool(d_ll < -1e-3),
+        }
+    notes = ["A variable 'helps' only if it lowers out-of-sample log-loss on the "
+             "real results. Positive d_log_loss => redundant/overfit; keep it in "
+             "the descriptive layer, not the engine."]
+    return IncrementalResult(
+        base_covariates=base, base_log_loss=base_rep.log_loss,
+        base_accuracy=base_rep.accuracy, variables=out, notes=notes)
+
+
 @dataclass
 class EngineComparison:
     dc: ValidationReport

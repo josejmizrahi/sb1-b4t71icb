@@ -41,6 +41,34 @@ def test_validation_reports_all_fields(matches, rankings):
     assert v.log_loss > 0 and v.brier > 0
 
 
+def test_simulate_matchday_vs_real(matches, rankings):
+    from wc2026.validation import simulate_matchday
+
+    rows = simulate_matchday(matches, rankings, ["rank_strength", "goal_attack"],
+                             n_sims=3000)
+    n_finished = sum(1 for m in matches if m.is_finished)
+    assert len(rows) == n_finished
+    for r in rows:
+        assert r["actual_outcome"] in ("H", "D", "A")
+        assert r["pred_outcome"] in ("H", "D", "A")
+        assert 0.0 <= r["p_actual"] <= 1.0
+        assert len(r["pred_score"]) == 2
+
+
+def test_incremental_variable_analysis(matches, rankings):
+    from wc2026.validation import incremental_variable_analysis
+
+    inc = incremental_variable_analysis(
+        matches, rankings, base=["rank_strength"],
+        candidates=["goal_attack"], n_sims=2500, n_boot=100)
+    assert inc.base_log_loss > 0
+    assert "goal_attack" in inc.variables
+    v = inc.variables["goal_attack"]
+    # d_log_loss is base - candidate consistency: log_loss == base + d
+    assert v["log_loss"] == pytest.approx(inc.base_log_loss + v["d_log_loss"], abs=1e-9)
+    assert isinstance(v["helps"], bool)
+
+
 def test_actual_outcome():
     from wc2026.types import Match
 

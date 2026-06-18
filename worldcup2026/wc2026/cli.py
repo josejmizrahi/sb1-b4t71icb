@@ -121,6 +121,55 @@ def cmd_backtest(args):
         pipe.close()
 
 
+def cmd_simulate_j1(args):
+    from .selection import select_covariates
+    from .model import CANDIDATE_COVARIATES, build_team_values
+    from .validation import simulate_matchday, incremental_variable_analysis
+
+    cfg = load_config()
+    pipe = Pipeline(cfg)
+    try:
+        pipe.ingest()
+        matches = pipe.db.load_matches()
+        rankings = pipe.db.load_rankings()
+        sel = select_covariates(matches, rankings)
+
+        # 1. simulate each played match (LOO) vs the REAL result
+        rows = simulate_matchday(matches, rankings, sel.selected, n_sims=args.sims)
+        hits = sum(r["correct"] for r in rows)
+        print(f"\n[simulacion jornada (LOO) vs resultados reales]  "
+              f"motor={sel.selected}")
+        print(f"  {'partido':38s} {'pred':>5s} {'real':>5s}  {'1X2 pred (H/D/A)':>20s}  ok")
+        for r in rows:
+            ps = f"{r['pred_score'][0]}-{r['pred_score'][1]}"
+            as_ = f"{r['actual_score'][0]}-{r['actual_score'][1]}"
+            p = r["pred_probs"]
+            print(f"  {r['home'][:18]:18s} v {r['away'][:17]:17s} {ps:>5s} {as_:>5s}  "
+                  f"{p['H']:.2f}/{p['D']:.2f}/{p['A']:.2f}  "
+                  f"{'Y' if r['correct'] else '.'}")
+        print(f"  -> acierto outcome: {hits}/{len(rows)} = {hits/len(rows):.3f}")
+
+        # 2. which EXTRA variables actually explain the real results (OOS)
+        tv = build_team_values(matches, rankings)
+        cands = [c for c in CANDIDATE_COVARIATES if c != "rank_strength"]
+        if not tv.has_xg:
+            cands = [c for c in cands if c == "goal_attack"]
+        inc = incremental_variable_analysis(
+            matches, rankings, base=["rank_strength"], candidates=cands,
+            n_sims=max(4000, args.sims // 3))
+        print(f"\n[valor incremental de variables] base=['rank_strength']  "
+              f"log-loss base={inc.base_log_loss:.3f} acc={inc.base_accuracy:.3f}")
+        print(f"  {'variable':18s} {'log-loss':>9s} {'d_ll':>7s} {'acc':>6s} {'d_acc':>7s}  explica?")
+        for c, v in sorted(inc.variables.items(), key=lambda kv: kv[1]["d_log_loss"]):
+            print(f"  {c:18s} {v['log_loss']:9.3f} {v['d_log_loss']:+7.3f} "
+                  f"{v['accuracy']:6.3f} {v['d_acc']:+7.3f}  "
+                  f"{'SI' if v['helps'] else 'no (redundante)'}")
+        for n in inc.notes:
+            print(f"  nota: {n}")
+    finally:
+        pipe.close()
+
+
 def cmd_pipeline(args):
     if getattr(args, "engine", None):
         os.environ["ENGINE"] = args.engine
@@ -169,6 +218,7 @@ def main(argv=None):
     p = argparse.ArgumentParser(prog="wc2026")
     sub = p.add_subparsers(dest="cmd", required=True)
     for name, fn in (("predict", cmd_predict), ("backtest", cmd_backtest),
+                     ("simulate-j1", cmd_simulate_j1),
                      ("pipeline", cmd_pipeline), ("watch", cmd_watch),
                      ("lineups", cmd_lineups)):
         sp = sub.add_parser(name)
