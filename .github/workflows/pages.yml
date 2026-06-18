@@ -70,6 +70,10 @@ jobs:
 
   deploy:
     needs: build
+    # The github-pages environment only allows deploys from the default branch,
+    # so we deploy from main. On feature branches the build still runs/validates
+    # but deploy is skipped (keeps the PR check green). Merge to publish.
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
