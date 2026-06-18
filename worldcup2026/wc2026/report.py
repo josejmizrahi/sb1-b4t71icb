@@ -203,7 +203,8 @@ if(D.quiniela && D.quiniela.picks && D.quiniela.picks.length){
   const q=D.quiniela;
   H+=`<h2>Quiniela: picks que maximizan puntos <span class="mut small">(no el marcador mas probable)</span></h2>`;
   H+=`<div class="card"><div class="small mut">Elegido para maximizar puntos esperados bajo el tablero (resultado +3, goles exactos +2/+2, diferencia +3, 1er equipo +2, 1er goleador +5). Puntos esperados totales (proximos ${q.picks.length}): <b>${f(q.total_expected_points,1)}</b></div>`;
-  if(q.booster_match){H+=`<div class="banner full" style="margin:10px 0">BOOSTER x2 -> ${esc(q.booster_match.home_team)} vs ${esc(q.booster_match.away_team)} (mayor E[pts]=${f(q.booster_match.expected_points,2)})</div>`;}
+  if(q.booster_safe){H+=`<div class="banner full" style="margin:10px 0">BOOSTER x2 SEGURO -> ${esc(q.booster_safe.home_team)} vs ${esc(q.booster_safe.away_team)} (E[pts] ${f(q.booster_safe.expected_points,1)} x2 = ${f(2*q.booster_safe.expected_points,1)})</div>`;}
+  if(q.booster_climber){const s=q.booster_climber.underdog_outcome==='A'?'gana visita':'gana local';H+=`<div class="banner reduced" style="margin:10px 0">BOOSTER x2 REMONTADA -> ${esc(q.booster_climber.home_team)} vs ${esc(q.booster_climber.away_team)} (${s} ${pct(q.booster_climber.p_underdog)}, E[pts] underdog ${f(q.booster_climber.ep_underdog,1)} x2 = ${f(2*q.booster_climber.ep_underdog,1)}; mas varianza/upside)</div>`;}
   H+=`<table><tr><th>Partido</th><th>Marcador</th><th>1er equipo</th><th>1er goleador</th><th>E[pts]</th></tr>`;
   for(const p of q.picks){
     H+=`<tr><td>${esc(p.home_team)} v ${esc(p.away_team)}</td>

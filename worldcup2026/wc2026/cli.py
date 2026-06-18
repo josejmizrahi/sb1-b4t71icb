@@ -192,16 +192,22 @@ def cmd_quiniela(args):
             print(f"  {p['home_team'][:16]:16s} v {p['away_team'][:16]:16s} "
                   f"{sc:>8s} {p['first_team'][:14]:>14s} {scorer:>20s} "
                   f"{p['expected_points']:7.2f}")
-        b = q["booster_match"]
-        if b:
-            print(f"\n  >> BOOSTER x2 recomendado: {b['home_team']} vs "
-                  f"{b['away_team']}  (E[pts]={b['expected_points']:.2f}, el mayor)")
+        bs, bc = q.get("booster_safe"), q.get("booster_climber")
+        if bs:
+            print(f"\n  >> BOOSTER x2 SEGURO: {bs['home_team']} vs {bs['away_team']}"
+                  f"  (E[pts]={bs['expected_points']:.2f} x2 = {2*bs['expected_points']:.1f})")
+        if bc:
+            side = "gana visita" if bc["underdog_outcome"] == "A" else "gana local"
+            print(f"  >> BOOSTER x2 REMONTADA: {bc['home_team']} vs {bc['away_team']}"
+                  f"  ({side} {bc['p_underdog']:.0%}, E[pts] underdog={bc['ep_underdog']:.2f}"
+                  f" x2 = {2*bc['ep_underdog']:.1f}; mas varianza, mas upside)")
         if q["underdog_candidates"]:
-            print("\n  >> Candidatos UNDERDOG (diferenciacion, +3 si <=10% del grupo):")
+            print("\n  >> Jugadas UNDERDOG para diferenciarte (+3 si <=10% del grupo):")
             for u in q["underdog_candidates"]:
-                side = "gana visitante" if u["underdog_outcome"] == "A" else "gana local"
-                print(f"     {u['home_team']} vs {u['away_team']}: "
-                      f"{side} (modelo {u['p_underdog']:.0%})")
+                side = "gana visita" if u["underdog_outcome"] == "A" else "gana local"
+                sc = f"{u['underdog_pick_score'][0]}-{u['underdog_pick_score'][1]}"
+                print(f"     {u['home_team']} vs {u['away_team']}: {side} {sc} "
+                      f"(modelo {u['p_underdog']:.0%}, E[pts]={u['ep_underdog']:.1f})")
         print("\n  nota: el marcador elegido NO es el mas probable, sino el que "
               "maximiza puntos esperados bajo el tablero de la quiniela.")
     finally:

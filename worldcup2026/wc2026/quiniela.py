@@ -41,8 +41,10 @@ def _sign(x: int) -> int:
     return (x > 0) - (x < 0)
 
 
-def optimize_scoreline(M: np.ndarray, scoring=SCORING):
+def optimize_scoreline(M: np.ndarray, scoring=SCORING, restrict_outcome=None):
     """Pick (h,a) maximizing expected score-related points under the joint pmf M.
+    If ``restrict_outcome`` ('H'/'D'/'A') is given, only scorelines of that
+    outcome are considered (used for the deliberate underdog play).
     Returns (best_h, best_a, expected_points, breakdown_probs)."""
     n = M.shape[0]
     # precompute marginals and outcome/diff distributions
@@ -60,6 +62,8 @@ def optimize_scoreline(M: np.ndarray, scoring=SCORING):
     for h in range(n):
         for a in range(n):
             o = "H" if h > a else "D" if h == a else "A"
+            if restrict_outcome and o != restrict_outcome:
+                continue
             ep = (scoring["resultado"] * p_outcome[o]
                   + scoring["goles_local"] * p_home_goals[h]
                   + scoring["goles_visita"] * p_away_goals[a]
@@ -107,6 +111,18 @@ def match_picks(pred: dict, scoring=SCORING) -> dict:
     p_underdog = probs[underdog_outcome]
 
     total_ep = ep_score + ep_first_team + ep_first_scorer
+
+    # deliberate UNDERDOG play: best scoreline restricted to the upset outcome,
+    # plus the +3 underdog bonus weighted by how often the upset actually happens
+    # (assumes you'd be in the <=10% that picked it). This is the climber's bet.
+    ep_dog = total_ep
+    dog_score = (h, a)
+    ud = optimize_scoreline(M, scoring, restrict_outcome=underdog_outcome)
+    if ud is not None:
+        dog_score = (ud[0], ud[1])
+        ep_dog = (ud[2] + ep_first_team + ep_first_scorer
+                  + scoring["underdog"] * p_underdog)
+
     return {
         "home_team": pred["home_team"], "away_team": pred["away_team"],
         "utc_date": pred.get("utc_date", ""),
@@ -119,6 +135,7 @@ def match_picks(pred: dict, scoring=SCORING) -> dict:
         "expected_points": total_ep,
         "favorite": fav, "underdog_outcome": underdog_outcome,
         "p_underdog": p_underdog,
+        "underdog_pick_score": dog_score, "ep_underdog": ep_dog,
         "probs": probs,
     }
 
@@ -134,24 +151,41 @@ def build_quiniela(predictions: list[dict], scoring=SCORING,
         upcoming = upcoming[:matchday_size]
     picks = [match_picks(p, scoring) for p in upcoming]
 
-    # Booster x2: the match where doubling gains the most (highest expected pts).
-    booster = max(picks, key=lambda x: x["expected_points"]) if picks else None
+    # Booster x2 -- two recommendations for two risk appetites:
+    #  SAFE: double the highest expected-points match (protects your position).
+    #  CLIMBER: double the best deliberate-underdog play (lower mean, high upside
+    #           -- the +EV move when you must leapfrog people from behind).
+    booster_safe = max(picks, key=lambda x: x["expected_points"]) if picks else None
+    dog_pool = [p for p in picks if p["p_underdog"] >= 0.22]
+    booster_climber = (max(dog_pool, key=lambda x: x["ep_underdog"])
+                       if dog_pool else None)
 
     # Underdog candidates: clear favorite by the crowd but model gives the upset
     # a meaningful chance -> good differentiation if it hits (<=10% will pick it).
     underdogs = sorted(
-        [p for p in picks if 0.25 <= p["p_underdog"] <= 0.45],
-        key=lambda x: -x["p_underdog"])[:5]
+        [p for p in picks if 0.25 <= p["p_underdog"] <= 0.48],
+        key=lambda x: -x["ep_underdog"])[:5]
+
+    def _bm(b):
+        if not b:
+            return None
+        return {"home_team": b["home_team"], "away_team": b["away_team"],
+                "expected_points": b["expected_points"],
+                "ep_underdog": b["ep_underdog"],
+                "underdog_outcome": b["underdog_outcome"],
+                "p_underdog": b["p_underdog"]}
 
     return {
         "picks": picks,
-        "booster_match": None if not booster else {
-            "home_team": booster["home_team"], "away_team": booster["away_team"],
-            "expected_points": booster["expected_points"]},
+        "booster_match": _bm(booster_safe),            # back-compat (safe)
+        "booster_safe": _bm(booster_safe),
+        "booster_climber": _bm(booster_climber),
         "underdog_candidates": [{
             "home_team": u["home_team"], "away_team": u["away_team"],
             "underdog_outcome": u["underdog_outcome"],
-            "p_underdog": u["p_underdog"]} for u in underdogs],
+            "underdog_pick_score": u["underdog_pick_score"],
+            "p_underdog": u["p_underdog"],
+            "ep_underdog": u["ep_underdog"]} for u in underdogs],
         "total_expected_points": sum(p["expected_points"] for p in picks),
         "scoring": scoring,
     }
