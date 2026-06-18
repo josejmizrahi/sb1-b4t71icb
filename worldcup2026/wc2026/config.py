@@ -1,0 +1,58 @@
+"""Central configuration. All secrets are read from environment variables
+(optionally via a local .env file) -- never hardcoded.
+"""
+from __future__ import annotations
+
+import os
+from dataclasses import dataclass
+
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv()  # loads .env from CWD if present; no-op otherwise
+except Exception:  # pragma: no cover - dotenv is optional at runtime
+    pass
+
+
+@dataclass(frozen=True)
+class Config:
+    data_provider: str
+    football_data_api_key: str | None
+    api_football_key: str | None
+    sportmonks_token: str | None
+    storage_backend: str
+    sqlite_path: str
+    supabase_url: str | None
+    supabase_key: str | None
+    poll_interval_hours: float
+    mc_simulations: int
+
+    @property
+    def has_xg_provider(self) -> bool:
+        """True when the configured provider can deliver xG / advanced stats.
+
+        football-data.org cannot; that triggers the reduced (FIFA-only) mode.
+        """
+        return self.data_provider in {"api-football", "sportmonks"}
+
+
+def _get(name: str, default: str | None = None) -> str | None:
+    val = os.environ.get(name, default)
+    if val is not None:
+        val = val.strip()
+    return val or default
+
+
+def load_config() -> Config:
+    return Config(
+        data_provider=_get("DATA_PROVIDER", "mock") or "mock",
+        football_data_api_key=_get("FOOTBALL_DATA_API_KEY"),
+        api_football_key=_get("API_FOOTBALL_KEY"),
+        sportmonks_token=_get("SPORTMONKS_API_TOKEN"),
+        storage_backend=_get("STORAGE_BACKEND", "sqlite") or "sqlite",
+        sqlite_path=_get("SQLITE_PATH", "worldcup2026.db") or "worldcup2026.db",
+        supabase_url=_get("SUPABASE_URL"),
+        supabase_key=_get("SUPABASE_KEY"),
+        poll_interval_hours=float(_get("POLL_INTERVAL_HOURS", "6") or "6"),
+        mc_simulations=int(_get("MC_SIMULATIONS", "50000") or "50000"),
+    )
