@@ -245,6 +245,31 @@ class BalldontlieProvider(DataProvider):
         self._session = requests.Session()
         self._session.headers.update({"Authorization": api_key})
 
+    def _request(self, path: str, params: dict, max_retries: int = 5):
+        """GET with 429 backoff (the trial tier allows ~5 req/min) and a clear
+        message when an endpoint is tier-gated (401)."""
+        import time
+
+        for attempt in range(max_retries):
+            resp = self._session.get(f"{self.BASE}{path}", params=params,
+                                     timeout=30)
+            if resp.status_code == 429:
+                wait = float(resp.headers.get("Retry-After", 12))
+                time.sleep(min(wait, 60))
+                continue
+            if resp.status_code == 401:
+                raise PermissionError(
+                    f"BALLDONTLIE returned 401 for {path}. Your key authenticates "
+                    "(e.g. /teams works) but this endpoint is gated behind a paid "
+                    "tier. Activate the 48h GOAT trial or subscribe for the FIFA "
+                    "World Cup sport to access matches/xG. See balldontlie.io.")
+            resp.raise_for_status()
+            return resp.json()
+        raise RuntimeError(
+            f"BALLDONTLIE rate limit (429) persisted for {path} after "
+            f"{max_retries} retries. Trial tier is ~5 req/min; retry later or "
+            "upgrade the plan.")
+
     def _get_all(self, path: str, **params) -> list[dict]:
         """Cursor-paginated GET. Returns the concatenated `data` arrays."""
         items: list[dict] = []
@@ -253,9 +278,7 @@ class BalldontlieProvider(DataProvider):
             p = dict(params, per_page=100)
             if cursor is not None:
                 p["cursor"] = cursor
-            resp = self._session.get(f"{self.BASE}{path}", params=p, timeout=30)
-            resp.raise_for_status()
-            body = resp.json()
+            body = self._request(path, p)
             items.extend(body.get("data", []))
             cursor = (body.get("meta") or {}).get("next_cursor")
             if not cursor:
