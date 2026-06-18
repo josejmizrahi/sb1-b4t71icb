@@ -48,6 +48,21 @@ def _load_committed_threats() -> dict[str, dict[str, float]]:
         return {}
 
 
+def _is_group_stage(m: Match) -> bool:
+    """True for group-stage fixtures with real teams (not knockout placeholders
+    like '1A'/'2B')."""
+    g = str(m.group or "").lower()
+    if g.startswith("group") or (len(g) == 1 and g.isalpha()):
+        return True
+    # fallback: both teams look real (not a '1A'-style placeholder)
+    def real(name: str) -> bool:
+        return bool(name) and not name[0].isdigit() and \
+            "winner" not in name.lower() and "runner" not in name.lower()
+    return real(m.home_team) and real(m.away_team) and g not in (
+        "round of 32", "round of 16", "quarter-finals", "semi-finals", "final",
+        "third place")
+
+
 def compute_standings(matches: list[Match]) -> list[dict]:
     """Group points/standings tallied directly from finished results (3-1-0).
     No API needed -- works for any provider that supplies group + scores."""
@@ -259,6 +274,10 @@ class Pipeline:
             if m.is_finished:
                 continue
             if m.home_team in ("TBD",) or m.away_team in ("TBD",):
+                continue
+            # group stage only: skip knockout fixtures (placeholder teams like
+            # "1A"/"2B", or rounds that aren't groups)
+            if not _is_group_stage(m):
                 continue
             try:
                 pred = predict_match(model, m.home_team, m.away_team, n_sims=n_sims,

@@ -128,11 +128,21 @@ def select_covariates(matches: list[Match], rankings: list[FifaRank],
                       use_elasticnet: bool = True) -> SelectionReport:
     tv = build_team_values(matches, rankings)
     cands = list(candidates or CANDIDATE_COVARIATES)
-    # ALWAYS drop raw goal_attack from the engine: it is not opponent-adjusted
-    # (a 5-1 win over a minnow inflates it), so one noisy match can invert a
-    # correct ranking (e.g. Sweden over Netherlands). Confirmed OOS to hurt
-    # (simulate-j1). It stays available only as a descriptive covariate.
-    cands = [c for c in cands if c != "goal_attack"]
+    # ALWAYS drop goal-based form (raw OR opponent-adjusted) from the engine.
+    # With ~1 match per team, a 5-1 over a minnow still dominates and inverts
+    # correct rankings (Sweden over Netherlands) -- even opp_adj_attack, which
+    # nominally "helped" the noisy 24-match OOS metric, produces nonsensical
+    # predictions. Elo (which already encodes recency-weighted form) is the
+    # honest strength signal. These stay available only as descriptive layers.
+    cands = [c for c in cands if c not in ("goal_attack", "opp_adj_attack")]
+    # Elo supersedes the FIFA rank (continuous + recency-weighted, more
+    # predictive, and collinear with rank). When Elo is available, use it as the
+    # strength prior and drop rank_strength from the engine.
+    PRIOR = "elo_strength" if getattr(tv, "has_elo", False) else "rank_strength"
+    if PRIOR == "elo_strength":
+        cands = [c for c in cands if c != "rank_strength"]
+    else:
+        cands = [c for c in cands if c != "elo_strength"]
     # drop xG-derived covariates that have no data (reduced mode)
     if not tv.has_xg:
         xg_dependent = {"xg_attack", "xg_defense", "possession",
@@ -200,7 +210,6 @@ def select_covariates(matches: list[Match], rankings: list[FifaRank],
     # form covariates layered on top, not this prior.
     cap = max(1, n // 10)
     ranked = sorted(survivors, key=rank_key, reverse=True)
-    PRIOR = "rank_strength"
     form_ranked = [c for c in ranked if c != PRIOR]
     selected = []
     if PRIOR in cands:
