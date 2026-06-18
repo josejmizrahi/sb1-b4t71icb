@@ -20,6 +20,7 @@ class Config:
     football_data_api_key: str | None
     api_football_key: str | None
     sportmonks_token: str | None
+    balldontlie_key: str | None
     storage_backend: str
     sqlite_path: str
     supabase_url: str | None
@@ -31,9 +32,9 @@ class Config:
     def has_xg_provider(self) -> bool:
         """True when the configured provider can deliver xG / advanced stats.
 
-        football-data.org cannot; that triggers the reduced (FIFA-only) mode.
+        football-data.org and openfootball cannot; that triggers reduced mode.
         """
-        return self.data_provider in {"api-football", "sportmonks"}
+        return self.data_provider in {"api-football", "sportmonks", "balldontlie"}
 
 
 def _get(name: str, default: str | None = None) -> str | None:
@@ -49,6 +50,7 @@ def load_config() -> Config:
         football_data_api_key=_get("FOOTBALL_DATA_API_KEY"),
         api_football_key=_get("API_FOOTBALL_KEY"),
         sportmonks_token=_get("SPORTMONKS_API_TOKEN"),
+        balldontlie_key=_get("BALLDONTLIE_API_KEY"),
         storage_backend=_get("STORAGE_BACKEND", "sqlite") or "sqlite",
         sqlite_path=_get("SQLITE_PATH", "worldcup2026.db") or "worldcup2026.db",
         supabase_url=_get("SUPABASE_URL"),

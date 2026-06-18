@@ -19,7 +19,7 @@ import warnings
 from typing import Iterable
 
 from .config import Config
-from .types import FifaRank, Match
+from .types import FifaRank, Goal, Match, MatchStats
 
 
 class DataProvider(abc.ABC):
@@ -119,6 +119,251 @@ class FootballDataOrgProvider(DataProvider):
 
 
 # ---------------------------------------------------------------------------
+# openfootball  (FREE, public domain, NO API key; no xG)
+# ---------------------------------------------------------------------------
+class OpenFootballProvider(DataProvider):
+    """https://github.com/openfootball/worldcup.json
+
+    Public-domain JSON, no key required. Gives the 2026 fixtures + results.
+    No xG / possession / passing and no FIFA ranking -> reduced mode.
+    """
+
+    name = "openfootball"
+    supports_xg = False
+    URL = ("https://raw.githubusercontent.com/openfootball/worldcup.json/"
+           "master/2026/worldcup.json")
+
+    def __init__(self, url: str | None = None):
+        self.url = url or self.URL
+        import requests
+
+        self._session = requests.Session()
+
+    @staticmethod
+    def _team_name(t) -> str:
+        # team1/team2 may be a plain string or an object {name, code, key}
+        if isinstance(t, dict):
+            return t.get("name") or t.get("code") or t.get("key") or "TBD"
+        return str(t) if t else "TBD"
+
+    @staticmethod
+    def _parse_minute(raw) -> int | None:
+        """openfootball encodes stoppage time as '90+4'; map it to 94."""
+        if raw is None:
+            return None
+        if isinstance(raw, int):
+            return raw
+        s = str(raw).strip()
+        if not s:
+            return None
+        try:
+            return sum(int(part) for part in s.split("+"))
+        except ValueError:
+            return None
+
+    @classmethod
+    def _goals(cls, raw_goals, team_name) -> list[Goal]:
+        out = []
+        for g in raw_goals or []:
+            minute = cls._parse_minute(g.get("minute") or g.get("m"))
+            if minute is None:
+                continue
+            out.append(Goal(minute=minute, team=team_name,
+                            scorer=g.get("name") or g.get("player")))
+        return out
+
+    def get_matches(self, competition: str = "WC") -> list[Match]:
+        data = self._session.get(self.url, timeout=30)
+        data.raise_for_status()
+        doc = data.json()
+
+        # The schema nests matches under rounds[]; some snapshots expose a flat
+        # "matches" list. Handle both.
+        raw_matches = []
+        if isinstance(doc.get("rounds"), list):
+            for rnd in doc["rounds"]:
+                for m in rnd.get("matches", []):
+                    m = dict(m)
+                    m.setdefault("round", rnd.get("name"))
+                    raw_matches.append(m)
+        else:
+            raw_matches = doc.get("matches", [])
+
+        out: list[Match] = []
+        for i, m in enumerate(raw_matches):
+            home = self._team_name(m.get("team1"))
+            away = self._team_name(m.get("team2"))
+            score = m.get("score") or {}
+            ft = score.get("ft")  # [goals1, goals2] when played
+            hg = ag = None
+            status = "SCHEDULED"
+            if isinstance(ft, (list, tuple)) and len(ft) == 2 and ft[0] is not None:
+                hg, ag = int(ft[0]), int(ft[1])
+                status = "FINISHED"
+            goals = (self._goals(m.get("goals1"), home)
+                     + self._goals(m.get("goals2"), away))
+            goals.sort(key=lambda g: g.minute)
+            out.append(Match(
+                provider_id=str(m.get("num") or m.get("id") or f"OF-{i:03d}"),
+                utc_date=f"{m.get('date','')}T{m.get('time','00:00')}",
+                competition="WC", home_team=home, away_team=away,
+                status=status, home_goals=hg, away_goals=ag, goals=goals,
+            ))
+        return out
+
+    def get_fifa_rankings(self) -> list[FifaRank]:
+        # openfootball does not carry the FIFA ranking.
+        warnings.warn(
+            "openfootball does not expose FIFA rankings; returning empty. The "
+            "pipeline falls back to the ranking snapshot (fixtures). [TODO: "
+            "ingest official ranking CSV]",
+            stacklevel=2,
+        )
+        return []
+
+
+# ---------------------------------------------------------------------------
+# BALLDONTLIE FIFA World Cup  (PAID after 48h trial; HAS xG)
+# ---------------------------------------------------------------------------
+class BalldontlieProvider(DataProvider):
+    """https://fifa.balldontlie.io/  (base: api.balldontlie.io/fifa/worldcup/v1)
+
+    Cheapest provider with real xG (~$10/mo All-Star tier). Delivers fixtures,
+    results, per-team match stats (xG, possession, shots, passes) and shot-level
+    data (xG per shot, minute) -> activates the full engine.
+    """
+
+    name = "balldontlie"
+    supports_xg = True
+    BASE = "https://api.balldontlie.io/fifa/worldcup/v1"
+
+    def __init__(self, api_key: str | None):
+        if not api_key:
+            raise ValueError("BALLDONTLIE_API_KEY is empty (see .env.example).")
+        import requests
+
+        self._session = requests.Session()
+        self._session.headers.update({"Authorization": api_key})
+
+    def _get_all(self, path: str, **params) -> list[dict]:
+        """Cursor-paginated GET. Returns the concatenated `data` arrays."""
+        items: list[dict] = []
+        cursor = None
+        for _ in range(200):  # hard page cap as a safety valve
+            p = dict(params, per_page=100)
+            if cursor is not None:
+                p["cursor"] = cursor
+            resp = self._session.get(f"{self.BASE}{path}", params=p, timeout=30)
+            resp.raise_for_status()
+            body = resp.json()
+            items.extend(body.get("data", []))
+            cursor = (body.get("meta") or {}).get("next_cursor")
+            if not cursor:
+                break
+        return items
+
+    @staticmethod
+    def _team_name(t) -> str:
+        if isinstance(t, dict):
+            return t.get("name") or t.get("abbreviation") or "TBD"
+        return str(t) if t else "TBD"
+
+    def get_matches(self, competition: str = "WC") -> list[Match]:
+        raw = self._get_all("/matches")
+        # team-level stats keyed by match_id for xG/possession/shots/passes
+        team_stats: dict[str, list[dict]] = {}
+        try:
+            for s in self._get_all("/team_match_stats"):
+                team_stats.setdefault(str(s.get("match_id")), []).append(s)
+        except Exception as e:  # stats are optional; matches still usable
+            warnings.warn(f"team_match_stats unavailable ({e}); xG omitted.",
+                          stacklevel=2)
+        # shot-level data for goal minutes (shot_type == goal) — best effort
+        shots_by_match: dict[str, list[dict]] = {}
+        try:
+            for sh in self._get_all("/match_shots"):
+                shots_by_match.setdefault(str(sh.get("match_id")), []).append(sh)
+        except Exception:
+            pass  # [TODO] confirm exact goal flag in match_shots
+
+        out: list[Match] = []
+        for m in raw:
+            mid = str(m.get("id"))
+            status = (m.get("status") or "").upper()
+            home_g, away_g = m.get("home_score"), m.get("away_score")
+            finished = status in {"FINISHED", "FULL_TIME", "FT", "COMPLETE",
+                                   "COMPLETED"} or (
+                home_g is not None and away_g is not None and status not in
+                {"SCHEDULED", "NOT_STARTED", ""})
+            match = Match(
+                provider_id=mid,
+                utc_date=m.get("datetime") or m.get("date") or "",
+                competition="WC",
+                home_team=self._team_name(m.get("home_team")),
+                away_team=self._team_name(m.get("away_team")),
+                status="FINISHED" if finished else "SCHEDULED",
+                home_goals=home_g if finished else None,
+                away_goals=away_g if finished else None,
+                stats=self._build_stats(team_stats.get(mid, [])),
+                goals=self._build_goals(shots_by_match.get(mid, []), match_home=mid),
+            )
+            out.append(match)
+        return out
+
+    @staticmethod
+    def _build_stats(rows: list[dict]) -> MatchStats:
+        home = next((r for r in rows if r.get("is_home")), None)
+        away = next((r for r in rows if not r.get("is_home")), None)
+        if not home or not away:
+            return MatchStats()
+        return MatchStats(
+            xg_for=home.get("expected_goals"),
+            xg_against=away.get("expected_goals"),
+            possession_home=home.get("possession_pct"),
+            possession_away=away.get("possession_pct"),
+            shots_on_target_home=home.get("shots_on_target"),
+            shots_on_target_away=away.get("shots_on_target"),
+            passes_completed_home=home.get("passes_accurate"),
+            passes_completed_away=away.get("passes_accurate"),
+            pass_accuracy_home=_safe_ratio(home.get("passes_accurate"),
+                                           home.get("passes_total")),
+            pass_accuracy_away=_safe_ratio(away.get("passes_accurate"),
+                                           away.get("passes_total")),
+        )
+
+    @staticmethod
+    def _build_goals(shots: list[dict], match_home: str) -> list[Goal]:
+        # [TODO] confirm the exact "is goal" flag; we accept shot_type == 'goal'.
+        out = []
+        for sh in shots:
+            if str(sh.get("shot_type", "")).lower() == "goal":
+                minute = sh.get("time_minute")
+                if minute is not None:
+                    out.append(Goal(minute=int(minute), team=str(sh.get("team_id")),
+                                    scorer=str(sh.get("player_id"))))
+        out.sort(key=lambda g: g.minute)
+        return out
+
+    def get_fifa_rankings(self) -> list[FifaRank]:
+        # BALLDONTLIE FIFA does not expose the world ranking.
+        warnings.warn(
+            "BALLDONTLIE does not expose FIFA rankings; pipeline falls back to "
+            "the ranking snapshot. [TODO: ingest official ranking]",
+            stacklevel=2,
+        )
+        return []
+
+
+def _safe_ratio(num, den):
+    try:
+        if num is None or not den:
+            return None
+        return round(100.0 * float(num) / float(den), 1)
+    except Exception:
+        return None
+
+
+# ---------------------------------------------------------------------------
 # Paid providers (stubs -- the engine is ready for xG the moment these land)
 # ---------------------------------------------------------------------------
 class ApiFootballProvider(DataProvider):
@@ -201,6 +446,10 @@ def make_provider(cfg: Config) -> DataProvider:
     p = cfg.data_provider
     if p == "football-data":
         return FootballDataOrgProvider(cfg.football_data_api_key)
+    if p == "openfootball":
+        return OpenFootballProvider()
+    if p == "balldontlie":
+        return BalldontlieProvider(cfg.balldontlie_key)
     if p == "api-football":
         return ApiFootballProvider(cfg.api_football_key)
     if p == "sportmonks":
@@ -220,7 +469,8 @@ def warn_if_reduced_mode(provider: DataProvider) -> bool:
             f"  El proveedor '{provider.name}' no entrega xG ni stats avanzadas.\n"
             "  El motor usa unicamente el ranking FIFA como senal predictiva.\n"
             "  Para activar el motor completo configura un proveedor con xG\n"
-            "  (DATA_PROVIDER=api-football o sportmonks). Ver .env.example.\n"
+            "  (DATA_PROVIDER=balldontlie ~$10/mes, api-football o sportmonks).\n"
+            "  Ver .env.example.\n"
             + "=" * 72 + "\n"
         )
         return True

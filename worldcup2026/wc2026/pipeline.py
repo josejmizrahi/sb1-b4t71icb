@@ -56,9 +56,17 @@ class Pipeline:
     def ingest(self) -> list[Match]:
         rankings = self.provider.get_fifa_rankings()
         if not rankings:
-            # provider couldn't supply ranks (e.g. football-data.org); fall back
-            # to any previously stored snapshot.
+            # provider couldn't supply ranks (football-data.org, openfootball,
+            # balldontlie); fall back to any previously stored snapshot...
             rankings = self.db.load_rankings()
+        if not rankings:
+            # ...and as a last resort to the bundled placeholder snapshot so the
+            # engine still has a rank signal. [TODO: replace with official CSV]
+            from . import fixtures
+
+            print("[ranking] sin ranking del proveedor ni en DB; uso snapshot "
+                  "placeholder (fixtures.fifa_ranking_snapshot). [TODO oficial]")
+            rankings = fixtures.fifa_ranking_snapshot()
         if rankings:
             self.db.save_rankings(rankings)
         matches = self.provider.get_matches()

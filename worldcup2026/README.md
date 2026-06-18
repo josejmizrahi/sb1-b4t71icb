@@ -38,7 +38,7 @@ por cada ~10 partidos de entrenamiento**.
 
 | Archivo | Rol |
 |---|---|
-| `wc2026/data_provider.py` | Abstracción `DataProvider` + backends (football-data.org, API-Football*, Sportmonks*, mock) |
+| `wc2026/data_provider.py` | Abstracción `DataProvider` + backends (football-data.org, openfootball, BALLDONTLIE, API-Football*, Sportmonks*, mock) |
 | `wc2026/model.py` | Dixon-Coles + MLE + Monte Carlo + shrinkage |
 | `wc2026/selection.py` | Selección de variables por evidencia (correlación + Lasso/ElasticNet + cap) |
 | `wc2026/validation.py` | Backtest LOO, baselines, bootstrap, test binomial |
@@ -75,12 +75,26 @@ STORAGE_BACKEND=sqlite
 SQLITE_PATH=worldcup2026.db
 ```
 
-- **football-data.org** (gratis, incluye el Mundial): da fixtures, resultados y
-  standings, pero **sin xG**. El sistema **degrada elegantemente a modo reducido
-  (solo-FIFA)** y lo **avisa en consola**.
-- **API-Football / Sportmonks** (de pago): aportan xG, alineaciones y stats de
-  partido → activan el motor completo. (Mapeo de ingesta marcado como `TODO`.)
+| Proveedor (`DATA_PROVIDER`) | Costo | Key | xG | Modo |
+|---|---|---|---|---|
+| `football-data` | Gratis | sí | ❌ | reducido |
+| `openfootball` | Gratis | **no** | ❌ | reducido |
+| `balldontlie` | ~$10/mes (trial 48h) | sí | ✅ | **completo** |
+| `api-football` | De pago | sí | ✅ | completo (`TODO` ingesta) |
+| `sportmonks` | De pago | sí | ✅ | completo (`TODO` ingesta) |
+| `mock` | Gratis | no | opcional | demo offline |
+
+- **football-data.org** / **openfootball** (gratis): fixtures + resultados, **sin
+  xG**. El sistema **degrada elegantemente a modo reducido (solo-FIFA)** y lo
+  **avisa en consola**. `openfootball` ni siquiera requiere key (dominio público).
+- **BALLDONTLIE** (de pago, la opción **más barata con xG**): aporta xG,
+  posesión, tiros y pases por partido → **activa el motor completo**.
+- **API-Football / Sportmonks** (de pago): mismas capacidades, mapeo `TODO`.
 - **mock**: dataset sintético offline para correr todo **sin ninguna API key**.
+
+> Ningún proveedor (ni de pago) entrega el **ranking FIFA** limpio. Hasta
+> enchufar un CSV oficial, el pipeline cae al snapshot placeholder de
+> `fixtures.py` (marcado `TODO`).
 
 > **Nota:** football-data.org **no publica el ranking FIFA**. Hasta enchufar un
 > CSV oficial, el ranking sale de `wc2026/fixtures.py` (`FIFA_RANKING_SNAPSHOT`,
