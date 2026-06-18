@@ -48,6 +48,7 @@ def render_report(result: PipelineResult, path: str = "reports/report.html") -> 
         "standings": result.standings or [],
         "descriptive": result.descriptive or {},
         "variable_evidence": result.variable_evidence or [],
+        "quiniela": result.quiniela or {},
         "selection": {
             "selected": result.selection.selected,
             "dropped": result.selection.dropped,
@@ -196,6 +197,28 @@ for(const r of D.wald){
       <td class="${r.significant_5pct?'sig':'nsig'}">${r.significant_5pct?'si':'no'}</td></tr>`;
 }
 H+=`</table></div>`;
+
+// Quiniela: point-maximizing picks
+if(D.quiniela && D.quiniela.picks && D.quiniela.picks.length){
+  const q=D.quiniela;
+  H+=`<h2>Quiniela: picks que maximizan puntos <span class="mut small">(no el marcador mas probable)</span></h2>`;
+  H+=`<div class="card"><div class="small mut">Elegido para maximizar puntos esperados bajo el tablero (resultado +3, goles exactos +2/+2, diferencia +3, 1er equipo +2, 1er goleador +5). Puntos esperados totales (proximos ${q.picks.length}): <b>${f(q.total_expected_points,1)}</b></div>`;
+  if(q.booster_match){H+=`<div class="banner full" style="margin:10px 0">BOOSTER x2 -> ${esc(q.booster_match.home_team)} vs ${esc(q.booster_match.away_team)} (mayor E[pts]=${f(q.booster_match.expected_points,2)})</div>`;}
+  H+=`<table><tr><th>Partido</th><th>Marcador</th><th>1er equipo</th><th>1er goleador</th><th>E[pts]</th></tr>`;
+  for(const p of q.picks){
+    H+=`<tr><td>${esc(p.home_team)} v ${esc(p.away_team)}</td>
+        <td><b>${p.pick_score[0]}-${p.pick_score[1]}</b></td>
+        <td>${esc(p.first_team)} <span class="small mut">${pct(p.p_first_team)}</span></td>
+        <td>${esc(p.first_scorer||'-')} <span class="small mut">${pct(p.p_first_scorer)}</span></td>
+        <td><b>${f(p.expected_points,2)}</b></td></tr>`;
+  }
+  H+=`</table>`;
+  if(q.underdog_candidates && q.underdog_candidates.length){
+    H+=`<div class="small" style="margin-top:8px"><b>Candidatos underdog</b> (diferenciacion, +3 si &le;10% del grupo lo elige): `+
+       q.underdog_candidates.map(u=>`${esc(u.home_team)} v ${esc(u.away_team)} (${u.underdog_outcome==='A'?'gana visita':'gana local'} ${pct(u.p_underdog)})`).join(' &middot; ')+`</div>`;
+  }
+  H+=`</div>`;
+}
 
 // Group standings
 if(D.standings && D.standings.length){

@@ -170,6 +170,44 @@ def cmd_simulate_j1(args):
         pipe.close()
 
 
+def cmd_quiniela(args):
+    if getattr(args, "engine", None):
+        os.environ["ENGINE"] = args.engine
+    cfg = load_config()
+    pipe = Pipeline(cfg)
+    try:
+        from .quiniela import build_quiniela
+        result = pipe.run_once(n_sims=args.sims, generate_predictions=True)
+        q = build_quiniela(result.predictions, matchday_size=args.next)
+        print(f"\n[QUINIELA] picks que MAXIMIZAN puntos esperados "
+              f"(motor={result.engine}, modo={result.mode})")
+        print(f"  proximos {len(q['picks'])} partidos  |  "
+              f"puntos esperados totales: {q['total_expected_points']:.1f}\n")
+        hdr = (f"  {'partido':36s} {'marcador':>8s} {'1er equipo':>14s} "
+               f"{'1er goleador':>20s} {'E[pts]':>7s}")
+        print(hdr)
+        for p in q["picks"]:
+            sc = f"{p['pick_score'][0]}-{p['pick_score'][1]}"
+            scorer = (p["first_scorer"] or "-")[:19]
+            print(f"  {p['home_team'][:16]:16s} v {p['away_team'][:16]:16s} "
+                  f"{sc:>8s} {p['first_team'][:14]:>14s} {scorer:>20s} "
+                  f"{p['expected_points']:7.2f}")
+        b = q["booster_match"]
+        if b:
+            print(f"\n  >> BOOSTER x2 recomendado: {b['home_team']} vs "
+                  f"{b['away_team']}  (E[pts]={b['expected_points']:.2f}, el mayor)")
+        if q["underdog_candidates"]:
+            print("\n  >> Candidatos UNDERDOG (diferenciacion, +3 si <=10% del grupo):")
+            for u in q["underdog_candidates"]:
+                side = "gana visitante" if u["underdog_outcome"] == "A" else "gana local"
+                print(f"     {u['home_team']} vs {u['away_team']}: "
+                      f"{side} (modelo {u['p_underdog']:.0%})")
+        print("\n  nota: el marcador elegido NO es el mas probable, sino el que "
+              "maximiza puntos esperados bajo el tablero de la quiniela.")
+    finally:
+        pipe.close()
+
+
 def cmd_pipeline(args):
     if getattr(args, "engine", None):
         os.environ["ENGINE"] = args.engine
@@ -218,15 +256,18 @@ def main(argv=None):
     p = argparse.ArgumentParser(prog="wc2026")
     sub = p.add_subparsers(dest="cmd", required=True)
     for name, fn in (("predict", cmd_predict), ("backtest", cmd_backtest),
-                     ("simulate-j1", cmd_simulate_j1),
+                     ("simulate-j1", cmd_simulate_j1), ("quiniela", cmd_quiniela),
                      ("pipeline", cmd_pipeline), ("watch", cmd_watch),
                      ("lineups", cmd_lineups)):
         sp = sub.add_parser(name)
         sp.add_argument("--sims", type=int, default=50_000,
                         help="Monte Carlo simulations per match")
-        if name in ("predict", "pipeline"):
+        if name in ("predict", "pipeline", "quiniela"):
             sp.add_argument("--engine", choices=["ml", "dc", "auto"], default=None,
                             help="Primary engine (default from ENGINE env, 'ml')")
+        if name == "quiniela":
+            sp.add_argument("--next", type=int, default=16,
+                            help="How many upcoming matches (next matchday)")
         if name == "predict":
             sp.add_argument("--out", default="reports/report.html")
         if name == "watch":
