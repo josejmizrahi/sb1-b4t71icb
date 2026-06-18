@@ -61,6 +61,8 @@ class TeamValues:
     """All per-team observable values used as covariates, with shrinkage applied
     where the sample is tiny."""
     rank_strength: dict[str, float]
+    goal_attack: dict[str, float]    # shrunk mean goals scored (works w/o xG)
+    goal_defense: dict[str, float]   # shrunk mean goals conceded (lower=better)
     xg_attack: dict[str, float]      # shrunk mean xG for
     xg_defense: dict[str, float]     # shrunk mean xG against (lower = better)
     possession: dict[str, float]
@@ -89,6 +91,8 @@ def build_team_values(matches: list[Match], rankings: list[FifaRank]) -> TeamVal
     )
 
     # gather per-team observed stats from finished matches
+    raw_gf: dict[str, list[float]] = {t: [] for t in teams}   # goals for
+    raw_ga: dict[str, list[float]] = {t: [] for t in teams}   # goals against
     raw_att: dict[str, list[float]] = {t: [] for t in teams}
     raw_def: dict[str, list[float]] = {t: [] for t in teams}
     raw_poss: dict[str, list[float]] = {t: [] for t in teams}
@@ -102,6 +106,11 @@ def build_team_values(matches: list[Match], rankings: list[FifaRank]) -> TeamVal
         for team, side in ((m.home_team, "home"), (m.away_team, "away")):
             if team not in raw_att:
                 continue
+            # actual goals are observable even without xG -> real form signal
+            gf = m.home_goals if side == "home" else m.away_goals
+            ga = m.away_goals if side == "home" else m.home_goals
+            raw_gf[team].append(float(gf))
+            raw_ga[team].append(float(ga))
             if has_xg and s.xg_for is not None:
                 xf = s.xg_for if side == "home" else s.xg_against
                 xa = s.xg_against if side == "home" else s.xg_for
@@ -126,6 +135,8 @@ def build_team_values(matches: list[Match], rankings: list[FifaRank]) -> TeamVal
 
     return TeamValues(
         rank_strength=rs,
+        goal_attack=shrink_table(raw_gf, 1.2),
+        goal_defense=shrink_table(raw_ga, 1.2),
         xg_attack=shrink_table(raw_att, 1.2),
         xg_defense=shrink_table(raw_def, 1.2),
         possession=shrink_table(raw_poss, 50.0),
@@ -139,6 +150,7 @@ def build_team_values(matches: list[Match], rankings: list[FifaRank]) -> TeamVal
 # uses the subset that survives selection (and the <=1-per-10 cap).
 CANDIDATE_COVARIATES = [
     "rank_strength",
+    "goal_attack",        # available even in reduced mode (no xG)
     "xg_attack",
     "possession",
     "shots_on_target",

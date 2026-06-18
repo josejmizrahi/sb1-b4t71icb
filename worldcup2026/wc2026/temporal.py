@@ -29,6 +29,28 @@ BREAK_DIP_DEPTH = 0.45      # rate drops to 55% right after a break
 BREAK_DIP_WIDTH = 5.0       # minutes over which the dip recovers
 
 
+def build_scorer_threats(matches) -> dict[str, dict[str, float]]:
+    """Aggregate REAL goal scorers per team from already-played matches.
+
+    Returns {team: {player: goals_scored}}. Used as the per-player threat for
+    the first-goal scorer prediction, so the report shows actual names (e.g.
+    who has scored in the tournament so far) instead of a generic placeholder.
+    Teams/players with no goals yet simply don't appear -> honest fallback.
+    """
+    threats: dict[str, dict[str, float]] = {}
+    for m in matches:
+        if not getattr(m, "is_finished", False):
+            continue
+        for g in m.goals:
+            scorer = (g.scorer or "").strip()
+            # skip own-goals / unknown / numeric-id-only scorers
+            if not scorer or scorer.lower() in {"og", "own goal"} or scorer.isdigit():
+                continue
+            threats.setdefault(g.team, {})
+            threats[g.team][scorer] = threats[g.team].get(scorer, 0.0) + 1.0
+    return threats
+
+
 def intensity_shape(t: np.ndarray) -> np.ndarray:
     """Unit-mean-ish shape of the scoring rate over time (before scaling).
 

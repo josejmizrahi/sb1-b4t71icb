@@ -153,6 +153,9 @@ class Pipeline:
 
     def _predict_upcoming(self, model: DixonColesModel, matches: list[Match],
                           n_sims: int) -> list[dict]:
+        from .temporal import build_scorer_threats
+
+        scorer_threats = build_scorer_threats(matches)  # real names so far
         out = []
         for m in matches:
             if m.is_finished:
@@ -166,6 +169,8 @@ class Pipeline:
                 continue
             fg = predict_first_goal(
                 pred.lam_home, pred.lam_away,
+                home_xi_threat=scorer_threats.get(m.home_team),
+                away_xi_threat=scorer_threats.get(m.away_team),
                 home_team=m.home_team, away_team=m.away_team,
             )
             out.append({
