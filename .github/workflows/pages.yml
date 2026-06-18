@@ -1,0 +1,79 @@
+name: Publish report to GitHub Pages
+
+on:
+  push:
+    branches: [main, claude/world-cup-2026-predictor-y9t68f]
+    paths:
+      - "worldcup2026/**"
+      - ".github/workflows/pages.yml"
+  schedule:
+    # Refresh predictions daily (runs on the default branch only).
+    - cron: "0 12 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: worldcup2026
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Generate report
+        env:
+          # If you add BALLDONTLIE_API_KEY as a repo secret, the page uses real
+          # xG (full engine); otherwise it falls back to the free openfootball
+          # provider (reduced, FIFA-only). No secret required for it to work.
+          BALLDONTLIE_API_KEY: ${{ secrets.BALLDONTLIE_API_KEY }}
+        run: |
+          if [ -n "$BALLDONTLIE_API_KEY" ]; then
+            export DATA_PROVIDER=balldontlie
+          else
+            export DATA_PROVIDER=openfootball
+          fi
+          export ENGINE=auto SQLITE_PATH=pages.db
+          echo "Building report with DATA_PROVIDER=$DATA_PROVIDER"
+          python -m wc2026.cli predict --engine auto --sims 15000 \
+            --out "$GITHUB_WORKSPACE/site/index.html"
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
