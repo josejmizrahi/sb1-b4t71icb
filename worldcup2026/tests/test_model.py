@@ -82,3 +82,23 @@ def test_fit_requires_minimum_matches(rankings):
     model = DixonColesModel(["rank_strength"])
     with pytest.raises(ValueError):
         model.fit([], rankings)
+
+
+def test_apply_elo_updates_bounded_and_directional():
+    from wc2026.model import apply_elo_updates
+    from wc2026.types import Match
+    base = {"strongteam": 1800.0, "weakteam": 1500.0}
+    # strong draws weak -> strong should DROP, weak should RISE, bounded
+    m = Match("1", "2026-06-20T12:00", "WC", "strongteam", "weakteam",
+              "FINISHED", 1, 1)
+    upd = apply_elo_updates(base, [m], k=55)
+    assert upd["strongteam"] < base["strongteam"]      # underperformed
+    assert upd["weakteam"] > base["weakteam"]           # overperformed
+    assert abs(upd["strongteam"] - base["strongteam"]) < 40   # bounded
+    # ordering preserved (strong still > weak after one match)
+    assert upd["strongteam"] > upd["weakteam"]
+    # a win by the favourite nudges it up, not down
+    m2 = Match("2", "2026-06-20T15:00", "WC", "strongteam", "weakteam",
+               "FINISHED", 2, 0)
+    upd2 = apply_elo_updates(base, [m2], k=55)
+    assert upd2["strongteam"] > base["strongteam"]

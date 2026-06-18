@@ -68,6 +68,41 @@ def _load_elo() -> dict[str, float]:
         return {}
 
 
+ELO_K = 55.0   # World Cup K-factor (World Football Elo uses ~60 for finals)
+
+
+def apply_elo_updates(elo_map: dict[str, float], matches, k: float = ELO_K
+                      ) -> dict[str, float]:
+    """Update the static pre-tournament Elo with the World Cup results played so
+    far, using the standard World Football Elo formula (with goal-difference
+    multiplier). This is the principled, BOUNDED way to fold tournament form into
+    the strength prior -- a team that under/over-performs its rating drifts a
+    little, without the overfitting of raw goal-based covariates. Neutral venue
+    (no home bonus). Keys are normalized team names."""
+    from .teamnames import normalize
+
+    elo = dict(elo_map)
+    finished = sorted((m for m in matches if m.is_finished),
+                      key=lambda m: m.utc_date or "")
+    for m in finished:
+        h, a = normalize(m.home_team), normalize(m.away_team)
+        if h not in elo or a not in elo:
+            continue
+        rh, ra = elo[h], elo[a]
+        exp_h = 1.0 / (1.0 + 10 ** ((ra - rh) / 400.0))
+        gd = abs(m.home_goals - m.away_goals)
+        g = 1.0 if gd <= 1 else (1.5 if gd == 2 else (11 + gd) / 8.0)
+        if m.home_goals > m.away_goals:
+            w_h = 1.0
+        elif m.home_goals < m.away_goals:
+            w_h = 0.0
+        else:
+            w_h = 0.5
+        elo[h] = rh + k * g * (w_h - exp_h)
+        elo[a] = ra + k * g * ((1.0 - w_h) - (1.0 - exp_h))
+    return elo
+
+
 @dataclass
 class TeamValues:
     """All per-team observable values used as covariates, with shrinkage applied
@@ -106,7 +141,8 @@ def build_team_values(matches: list[Match], rankings: list[FifaRank]) -> TeamVal
     # better than the ordinal FIFA rank. Standardized per 100 Elo, centred.
     from .teamnames import normalize
 
-    elo_map = _load_elo()
+    # dynamic Elo: static pre-tournament snapshot updated with WC results so far
+    elo_map = apply_elo_updates(_load_elo(), matches)
     elo_raw = {t: elo_map.get(normalize(t)) for t in teams}
     present = [v for v in elo_raw.values() if v is not None]
     # Use Elo if we have it for a reasonable number of real teams. (Don't gate on
