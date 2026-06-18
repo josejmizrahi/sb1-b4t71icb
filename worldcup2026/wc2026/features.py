@@ -20,7 +20,9 @@ from .types import FifaRank, Match
 
 
 def feature_names(has_xg: bool) -> list[str]:
-    base = ["is_home", "own_strength", "opp_strength", "strength_diff"]
+    # goal form is observable even without xG, so it is always included
+    base = ["is_home", "own_strength", "opp_strength", "strength_diff",
+            "own_goal_attack", "opp_goal_defense", "goal_matchup"]
     if has_xg:
         base += [
             "own_xg_attack", "opp_xg_defense", "xg_matchup",
@@ -34,7 +36,10 @@ def _row(tv: TeamValues, team: str, opp: str, is_home: bool,
          has_xg: bool) -> list[float]:
     own_s = tv.rank_strength.get(team, 0.0)
     opp_s = tv.rank_strength.get(opp, 0.0)
-    feats = [1.0 if is_home else 0.0, own_s, opp_s, own_s - opp_s]
+    own_ga = tv.goal_attack.get(team, 1.2)
+    opp_gd = tv.goal_defense.get(opp, 1.2)
+    feats = [1.0 if is_home else 0.0, own_s, opp_s, own_s - opp_s,
+             own_ga, opp_gd, own_ga - opp_gd]
     if has_xg:
         own_att = tv.xg_attack.get(team, 0.0)
         opp_def = tv.xg_defense.get(opp, 0.0)

@@ -26,9 +26,14 @@ def test_feature_matrix_doubles_sample(xg_data):
 
 
 def test_reduced_mode_feature_set_is_small():
-    # no xG -> only rank + venue features
-    assert feature_names(has_xg=False) == [
-        "is_home", "own_strength", "opp_strength", "strength_diff"]
+    # no xG -> rank + venue + goal-form features (goals are observable w/o xG),
+    # but NO xG/possession/passing features.
+    names = feature_names(has_xg=False)
+    assert names == ["is_home", "own_strength", "opp_strength", "strength_diff",
+                     "own_goal_attack", "opp_goal_defense", "goal_matchup"]
+    assert not any("xg" in n or "possession" in n or "pass" in n for n in names)
+    # full mode adds the xG/stat features on top
+    assert len(feature_names(has_xg=True)) > len(names)
 
 
 def test_ml_fits_and_predicts_lambdas(xg_data):

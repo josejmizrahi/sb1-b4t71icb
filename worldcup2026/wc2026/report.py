@@ -188,14 +188,16 @@ for(const p of D.predictions){
       <span class="d" style="width:${Math.max(8,100*p.prob_draw)}%">${pct(p.prob_draw)}</span>
       <span class="a" style="width:${Math.max(8,100*p.prob_away)}%">${pct(p.prob_away)}</span></div>
       <div class="small mut">Local / Empate / Visita</div>
-      <div style="margin-top:8px">Marcador mas probable (MC): <b>${p.most_likely_score[0]}-${p.most_likely_score[1]}</b></div>
+      <div style="margin-top:8px">Marcadores mas probables (MC): `+
+      Object.entries(p.score_probs).slice(0,3).map(([sc,pr],i)=>
+        `<b>${esc(sc)}</b> <span class="small mut">${pct(pr)}</span>`).join(' &middot; ')+`</div>
       <div class="small mut">Goles totales</div><div class="bars">`;
   for(const k of ['0','1','2','3','4+']){const val=p.total_goals_dist[k]||0;
     H+=`<div><span class="lab">${k}</span><div class="bar" style="width:${Math.round(220*val)}px"></div><span class="small mut">${pct(val)}</span></div>`;}
   H+=`</div><div class="small" style="margin-top:6px">
       Over 2.5: <b>${pct(p.over_2_5)}</b> &middot; Under: <b>${pct(p.under_2_5)}</b> &middot; BTTS: <b>${pct(p.btts)}</b></div>
       <div class="small mut" style="margin-top:8px">1er gol ~ min <b>${f(fg.expected_minute,1)}</b> (mediana ${f(fg.median_minute,0)}) &middot; sin gol: ${pct(fg.p_no_goal)}</div>
-      <div class="small">Probable anotador: `+
+      <div class="small">Probable anotador <span class="mut">(por goles en el torneo)</span>: `+
       (fg.likely_scorers||[]).slice(0,3).map(x=>`${esc(x.player)} (${pct(x.prob)})`).join(', ')+`</div></div>`;
 }
 H+=`</div>`;
