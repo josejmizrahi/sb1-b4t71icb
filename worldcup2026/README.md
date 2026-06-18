@@ -137,6 +137,14 @@ DATA_PROVIDER=balldontlie python -m wc2026.cli predict --sims 50000
 
 # Elegir motor explícitamente (ml | dc | auto):
 python -m wc2026.cli predict --engine auto
+
+# Quiniela: picks que MAXIMIZAN puntos esperados (marcador, 1er equipo, 1er
+# goleador) + recomendación de Booster x2 + candidatos underdog:
+python -m wc2026.cli quiniela --next 16
+
+# Simular la jornada jugada vs los resultados reales + valor incremental
+# (out-of-sample) de cada variable explicativa:
+python -m wc2026.cli simulate-j1
 ```
 
 Imprime selección de variables, tabla de Wald (coef, error estándar, p-value),

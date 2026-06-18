@@ -77,6 +77,7 @@ class PipelineResult:
     standings: list = field(default_factory=list)
     descriptive: dict = field(default_factory=dict)
     variable_evidence: list = field(default_factory=list)
+    quiniela: dict = field(default_factory=dict)
     notes: list[str] = field(default_factory=list)
 
 
@@ -194,12 +195,16 @@ class Pipeline:
             predictions = self._predict_upcoming(primary_model, matches, n_sims,
                                                  player_threats)
 
+        # quiniela: point-maximizing picks under the pool's scoring
+        from .quiniela import build_quiniela
+        quiniela = build_quiniela(predictions) if predictions else {}
+
         return PipelineResult(
             mode=mode, selection=selection, fit=fit, validation=validation,
             predictions=predictions, newly_finished=[m.provider_id for m in newly],
             run_id=run_id, engine=engine, comparison=comparison, ml_fit=ml_fit,
             standings=standings, descriptive=descriptive,
-            variable_evidence=variable_evidence, notes=notes,
+            variable_evidence=variable_evidence, quiniela=quiniela, notes=notes,
         )
 
     @staticmethod
@@ -249,6 +254,7 @@ class Pipeline:
                 "away_team": m.away_team,
                 "lam_home": pred.lam_home,
                 "lam_away": pred.lam_away,
+                "rho": pred.rho,
                 "prob_home": pred.prob_home,
                 "prob_draw": pred.prob_draw,
                 "prob_away": pred.prob_away,
