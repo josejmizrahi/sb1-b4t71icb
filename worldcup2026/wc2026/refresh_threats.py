@@ -54,6 +54,11 @@ def _from_goalscorers(since_year: int = 2023, halflife_months: float = 18.0
             continue
         months_ago = (today.year - int(d[:4])) * 12 + (today.month - int(d[5:7]))
         w = 0.5 ** (max(0, months_ago) / halflife_months)
+        # Penalty goals weigh extra: they flag the designated penalty taker, who
+        # will take ANY penalty in the match and converts ~75% -> a reliable,
+        # repeatable first-goal source.
+        if (row.get("penalty") or "").upper() == "TRUE":
+            w *= 2.0
         threats.setdefault(team, {})
         threats[team][scorer] = threats[team].get(scorer, 0.0) + w
     # keep only the meaningful threats per team (top ~12) to keep the file small

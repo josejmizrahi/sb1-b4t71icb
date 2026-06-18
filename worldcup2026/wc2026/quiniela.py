@@ -159,6 +159,93 @@ def match_picks(pred: dict, scoring=SCORING) -> dict:
     }
 
 
+def _points_for_pick(pick, actual, scoring, picked_underdog, underdog_sign):
+    """Quiniela score-category points for a (h,a) pick vs an actual (h,a)."""
+    ph, pa = pick
+    ah, aa = actual
+    pts = 0
+    if (ph > pa) - (ph < pa) == (ah > aa) - (ah < aa):
+        pts += scoring["resultado"]
+    if ph == ah:
+        pts += scoring["goles_local"]
+    if pa == aa:
+        pts += scoring["goles_visita"]
+    if ph - pa == ah - aa:
+        pts += scoring["diferencia"]
+    if picked_underdog and (ah > aa) - (ah < aa) == underdog_sign:
+        pts += scoring["underdog"]
+    return pts
+
+
+def recovery_strategies(predictions: list[dict], scoring=SCORING,
+                        n_sims: int = 6000, target_gain: float = 0,
+                        max_underdogs: int = 3, seed: int = 0) -> dict:
+    """Compare jornada strategies by the DISTRIBUTION of points, not just the
+    mean. When you are behind, the right play maximizes the chance of a big
+    score (upside), not the average. For k = 0..max_underdogs we deliberately
+    play the k highest-upside matches as underdogs (and put the Booster x2 on the
+    best of them when k>0, else on the safest match) and Monte-Carlo the total.
+
+    Reports mean, P90 (upside) and P(gain >= target) per strategy, and
+    recommends the k that best beats the target (the gap you must close)."""
+    import numpy as np
+
+    rng = np.random.default_rng(seed)
+    picks = [match_picks(p, scoring) for p in predictions]
+    mats = [score_matrix(p["lam_home"], p["lam_away"], p.get("rho", 0.0), MAXG)
+            for p in predictions]
+    flats = [m.ravel() for m in mats]
+    ncol = MAXG + 1
+    # first team/scorer EV is (almost) independent of the result strategy:
+    const = sum(p["ep_first_team"] + p["ep_first_scorer"] for p in picks)
+
+    # rank matches by underdog upside (E[pts] of the upset pick)
+    dog_order = sorted(range(len(picks)), key=lambda i: -picks[i]["ep_underdog"])
+    safe_booster = max(range(len(picks)),
+                       key=lambda i: picks[i]["expected_points"]) if picks else 0
+
+    out = {}
+    for k in range(0, max_underdogs + 1):
+        dogs = set(dog_order[:k])
+        booster = (dog_order[0] if k > 0 else safe_booster) if picks else None
+        totals = np.empty(n_sims)
+        for s in range(n_sims):
+            tot = const
+            for i, p in enumerate(picks):
+                idx = rng.choice(flats[i].size, p=flats[i])
+                ah, aa = divmod(idx, ncol)
+                if i in dogs:
+                    pick = p["underdog_pick_score"]
+                    pts = _points_for_pick(pick, (ah, aa), scoring, True,
+                                           1 if p["underdog_outcome"] == "H" else -1)
+                else:
+                    pts = _points_for_pick(p["pick_score"], (ah, aa), scoring,
+                                           False, 0)
+                if i == booster:
+                    pts *= 2
+                tot += pts
+            totals[s] = tot
+        out[k] = {
+            "n_underdogs": k,
+            "mean": float(np.mean(totals)),
+            "p10": float(np.percentile(totals, 10)),
+            "p90": float(np.percentile(totals, 90)),
+            "p_target": float(np.mean(totals >= np.mean(totals) + target_gain))
+            if target_gain else None,
+            "booster_match": None if booster is None else
+            f"{picks[booster]['home_team']} vs {picks[booster]['away_team']}",
+            "underdog_matches": [f"{picks[i]['home_team']} vs {picks[i]['away_team']}"
+                                 for i in dog_order[:k]],
+        }
+    # recommend: if a target gap is given, the k maximizing P(reach it); else the
+    # k maximizing upside (P90) without tanking the mean too much.
+    if target_gain:
+        rec = max(out, key=lambda k: out[k]["p_target"])
+    else:
+        rec = max(out, key=lambda k: out[k]["p90"])
+    return {"strategies": out, "recommended_k": rec, "target_gain": target_gain}
+
+
 def build_quiniela(predictions: list[dict], scoring=SCORING,
                    matchday_size: int | None = None) -> dict:
     """Build picks for the upcoming matches, sorted by date. Recommends where to
