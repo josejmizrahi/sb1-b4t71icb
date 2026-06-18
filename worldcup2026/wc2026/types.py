@@ -48,6 +48,7 @@ class Match:
     home_xi: list[str] = field(default_factory=list)   # official starting XI
     away_xi: list[str] = field(default_factory=list)
     lineup_posted_at: Optional[str] = None
+    group: Optional[str] = None      # group label (e.g. "Group A") if known
 
     @property
     def is_finished(self) -> bool:

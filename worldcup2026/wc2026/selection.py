@@ -113,15 +113,33 @@ def select_covariates(matches: list[Match], rankings: list[FifaRank],
                            reverse=True)[:1]
         notes.append("No covariate cleared the threshold; kept strongest by |r|.")
 
-    # 3. hard cap: <= 1 variable per ~10 matches
+    # 3. hard cap: <= 1 variable per ~10 matches (applies to FORM/stat vars).
+    # rank_strength (FIFA) is a STRUCTURAL strength prior, always kept: it
+    # encodes decades of results, so a single early-tournament match cannot make
+    # the model forget that e.g. Spain >> Saudi Arabia. The cap limits the noisy
+    # form covariates layered on top, not this prior.
     cap = max(1, n // 10)
     ranked = sorted(survivors, key=rank_key, reverse=True)
-    selected = ranked[:cap]
+    PRIOR = "rank_strength"
+    form_ranked = [c for c in ranked if c != PRIOR]
+    selected = []
+    if PRIOR in cands:
+        selected.append(PRIOR)
+    # add the strongest form covariates up to the cap (total engine vars)
+    for c in form_ranked:
+        if len(selected) >= cap:
+            break
+        selected.append(c)
+    if not selected:                      # no rank available (degenerate)
+        selected = ranked[:cap]
     dropped = [c for c in cands if c not in selected]
-    if len(ranked) > cap:
+    if PRIOR in cands and PRIOR not in ranked:
+        notes.append("rank_strength kept as structural strength prior (not "
+                     "subject to the form-variable cap).")
+    if len(form_ranked) > max(0, cap - 1):
         notes.append(
-            f"Cap of {cap} (n={n}, rule <=1 var/10 matches) trimmed "
-            f"{len(ranked) - cap} surviving covariate(s) to the descriptive layer."
+            f"Cap of {cap} (n={n}, rule <=1 var/10 matches) limits form vars; "
+            f"extra surviving covariate(s) moved to the descriptive layer."
         )
 
     return SelectionReport(

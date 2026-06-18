@@ -32,6 +32,36 @@ from .validation import (
 from .types import Match
 
 
+def compute_standings(matches: list[Match]) -> list[dict]:
+    """Group points/standings tallied directly from finished results (3-1-0).
+    No API needed -- works for any provider that supplies group + scores."""
+    table: dict[tuple, dict] = {}
+    for m in matches:
+        if not m.is_finished or not m.group:
+            continue
+        for team, gf, ga in ((m.home_team, m.home_goals, m.away_goals),
+                             (m.away_team, m.away_goals, m.home_goals)):
+            s = table.setdefault((m.group, team), {
+                "group": m.group, "team": team, "played": 0, "won": 0,
+                "drawn": 0, "lost": 0, "gf": 0, "ga": 0, "points": 0})
+            s["played"] += 1
+            s["gf"] += gf
+            s["ga"] += ga
+            if gf > ga:
+                s["won"] += 1
+                s["points"] += 3
+            elif gf == ga:
+                s["drawn"] += 1
+                s["points"] += 1
+            else:
+                s["lost"] += 1
+    out = []
+    for s in table.values():
+        s["gd"] = s["gf"] - s["ga"]
+        out.append(s)
+    return out
+
+
 @dataclass
 class PipelineResult:
     mode: str
@@ -44,6 +74,8 @@ class PipelineResult:
     engine: str = "dc"                # which engine produced the predictions
     comparison: EngineComparison | None = None
     ml_fit: object | None = None
+    standings: list = field(default_factory=list)
+    descriptive: dict = field(default_factory=dict)
     notes: list[str] = field(default_factory=list)
 
 
@@ -139,23 +171,55 @@ class Pipeline:
         run_id = self.db.log_training_run(mode, fit, validation, engine=engine,
                                           extra_metrics=extra)
 
+        # descriptive layer: per-team averages of the stats the engine does NOT
+        # use directly (possession, shots, passes) -- visible, not predictive.
+        descriptive = self._build_descriptive(dc_model.team_values, matches)
+
+        # group standings computed from results (no extra API) + real-lineup
+        # player threats (best effort)
+        standings = compute_standings(matches)
+        player_threats = {}
+        try:
+            player_threats = self.provider.get_player_threats()
+        except Exception:
+            player_threats = {}
+
         # 8. predictions for upcoming matches with the PRIMARY engine
         predictions: list[dict] = []
         if generate_predictions:
-            predictions = self._predict_upcoming(primary_model, matches, n_sims)
+            predictions = self._predict_upcoming(primary_model, matches, n_sims,
+                                                 player_threats)
 
         return PipelineResult(
             mode=mode, selection=selection, fit=fit, validation=validation,
             predictions=predictions, newly_finished=[m.provider_id for m in newly],
             run_id=run_id, engine=engine, comparison=comparison, ml_fit=ml_fit,
-            notes=notes,
+            standings=standings, descriptive=descriptive, notes=notes,
         )
 
+    @staticmethod
+    def _build_descriptive(tv, matches: list[Match]) -> dict:
+        if tv is None or not getattr(tv, "has_xg", False):
+            return {}
+        teams = sorted({t for m in matches for t in (m.home_team, m.away_team)})
+        out = {}
+        for t in teams:
+            out[t] = {
+                "xg_attack": round(tv.xg_attack.get(t, 0.0), 2),
+                "goal_attack": round(tv.goal_attack.get(t, 0.0), 2),
+                "possession": round(tv.possession.get(t, 0.0), 1),
+                "shots_on_target": round(tv.shots_on_target.get(t, 0.0), 1),
+                "pass_accuracy": round(tv.pass_accuracy.get(t, 0.0), 1),
+            }
+        return out
+
     def _predict_upcoming(self, model: DixonColesModel, matches: list[Match],
-                          n_sims: int) -> list[dict]:
+                          n_sims: int, player_threats: dict | None = None) -> list[dict]:
         from .temporal import build_scorer_threats
 
-        scorer_threats = build_scorer_threats(matches)  # real names so far
+        # Prefer real-lineup threats (xG-weighted squad that played); fall back
+        # to scorers aggregated from goals when the provider has no player data.
+        scorer_threats = player_threats or build_scorer_threats(matches)
         out = []
         for m in matches:
             if m.is_finished:
