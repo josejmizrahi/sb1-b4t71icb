@@ -52,15 +52,26 @@ jobs:
           # snapshot (data/player_threats.json) instead.
           BALLDONTLIE_FETCH_PLAYER_GOALS: "false"
         run: |
-          if [ -n "$BALLDONTLIE_API_KEY" ]; then
-            export DATA_PROVIDER=balldontlie
-          else
-            export DATA_PROVIDER=openfootball
-          fi
+          set -e
           export ENGINE=auto SQLITE_PATH=pages.db
-          echo "Building report with DATA_PROVIDER=$DATA_PROVIDER"
-          python -m wc2026.cli predict --engine auto --sims 15000 \
-            --out "$GITHUB_WORKSPACE/site/index.html"
+          OUT="$GITHUB_WORKSPACE/site/index.html"
+          ok=0
+          if [ -n "$BALLDONTLIE_API_KEY" ]; then
+            echo "Trying DATA_PROVIDER=balldontlie (real xG)..."
+            if DATA_PROVIDER=balldontlie timeout 300 python -m wc2026.cli predict \
+                 --engine auto --sims 15000 --out "$OUT"; then
+              ok=1
+            else
+              echo "::warning::balldontlie failed (key invalid / rate limit); falling back to openfootball"
+              rm -f pages.db
+            fi
+          fi
+          if [ "$ok" != "1" ]; then
+            echo "Building with DATA_PROVIDER=openfootball (free, reliable)..."
+            DATA_PROVIDER=openfootball python -m wc2026.cli predict \
+              --engine auto --sims 15000 --out "$OUT"
+          fi
+          test -s "$OUT"
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
