@@ -55,3 +55,24 @@ def test_build_quiniela_picks_booster_highest_ev():
     # the lopsided match (C vs D) should carry more expected points -> booster
     assert q["booster_match"]["home_team"] == "C"
     assert q["total_expected_points"] > 0
+
+
+def test_points_for_pick_and_recovery():
+    from wc2026.quiniela import _points_for_pick, recovery_strategies, SCORING
+    # exact 2-1 hit: resultado(3)+local(2)+visita(2)+diferencia(3) = 10
+    assert _points_for_pick((2, 1), (2, 1), SCORING, False, 0) == 10
+    # pick 2-0, actual 1-0: resultado(3) + away-goals exact(2) = 5
+    assert _points_for_pick((2, 0), (1, 0), SCORING, False, 0) == 5
+    preds = [
+        {"home_team": "A", "away_team": "B", "utc_date": "2026-06-20T12:00",
+         "lam_home": 1.1, "lam_away": 1.1, "rho": 0.0,
+         "prob_home": 0.36, "prob_draw": 0.3, "prob_away": 0.34, "first_goal": {}},
+        {"home_team": "C", "away_team": "D", "utc_date": "2026-06-20T15:00",
+         "lam_home": 2.4, "lam_away": 0.6, "rho": 0.0,
+         "prob_home": 0.82, "prob_draw": 0.12, "prob_away": 0.06, "first_goal": {}},
+    ]
+    rec = recovery_strategies(preds, n_sims=1500, max_underdogs=2)
+    assert set(rec["strategies"]) == {0, 1, 2}
+    for s in rec["strategies"].values():
+        assert s["p90"] >= s["mean"] >= s["p10"]
+    assert rec["recommended_k"] in (0, 1, 2)

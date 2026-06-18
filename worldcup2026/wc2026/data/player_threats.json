@@ -4,20 +4,20 @@
 "Farshad Noor": 0.292,
 "Jabar Sharza": 0.292,
 "Rahmat Akbari": 0.354,
-"Sharif Mukhammad": 0.354
+"Sharif Mukhammad": 0.707
 },
 "albania": {
 "Arbër Hoxha": 0.891,
 "Ardian Ismajli": 0.445,
 "Jasir Asani": 1.268,
 "Klaus Gjasula": 0.397,
-"Kristjan Asllani": 2.184,
+"Kristjan Asllani": 2.891,
 "Mirlind Daku": 0.281,
 "Myrto Uzuni": 0.561,
-"Nedim Bajrami": 1.659,
+"Nedim Bajrami": 2.14,
 "Qazim Laçi": 0.397,
 "Rey Manaj": 1.857,
-"Sokol Çikalleshi": 0.303,
+"Sokol Çikalleshi": 0.606,
 "Taulant Seferi": 0.583
 },
 "algeria": {
@@ -29,9 +29,9 @@
 "Houssem Aouar": 0.397,
 "Ibrahim Maza": 1.587,
 "Jaouen Hadjam": 0.561,
-"Mohamed Amoura": 5.33,
+"Mohamed Amoura": 6.8,
 "Mohamed El Amine Amoura": 1.122,
-"Riyad Mahrez": 3.116,
+"Riyad Mahrez": 3.91,
 "Zineddine Belaïd": 0.794
 },
 "andorra": {
@@ -48,12 +48,12 @@
 "Gilberto": 0.327,
 "Jonathan Buatu": 0.735,
 "M'Bala Nzola": 0.707,
-"Mabululu": 1.379,
+"Mabululu": 1.706,
 "Show": 0.794,
 "Zini": 1.034
 },
 "anguilla": {
-"Luke Paris": 0.354
+"Luke Paris": 0.707
 },
 "antigua and barbuda": {
 "Raheem Deterville": 0.397
@@ -76,17 +76,17 @@
 "Artak Dashyan": 0.281,
 "Artur Miranyan": 0.481,
 "Edgar Sevikyan": 0.561,
-"Eduard Spertsyan": 2.397,
+"Eduard Spertsyan": 3.104,
 "Gor Manvelyan": 0.463,
 "Grant-Leon Ranos": 1.207,
 "Lucas Zelarayán": 1.711,
 "Nair Tiknizyan": 0.25,
-"Tigran Barseghyan": 0.25,
+"Tigran Barseghyan": 0.5,
 "Vahan Bichakhchyan": 0.445
 },
 "aruba": {
 "Diederick Luydens": 0.63,
-"Isaï Marselia": 0.397,
+"Isaï Marselia": 0.794,
 "Walter Bennett": 0.397
 },
 "australia": {
@@ -96,11 +96,11 @@
 "Harry Souttar": 0.934,
 "Jackson Irvine": 2.338,
 "Jamie Maclaren": 0.909,
-"Kusini Yengi": 2.506,
+"Kusini Yengi": 2.903,
 "Lewis Miller": 1.024,
-"Martin Boyle": 1.613,
+"Martin Boyle": 2.501,
 "Mitch Duke": 0.63,
-"Nestory Irankunda": 1.397,
+"Nestory Irankunda": 1.794,
 "Nishan Velupillay": 1.585
 },
 "austria": {
@@ -108,8 +108,8 @@
 "Florian Kainz": 0.223,
 "Gernot Trauner": 0.397,
 "Konrad Laimer": 2.482,
-"Marcel Sabitzer": 4.378,
-"Marko Arnautović": 8.611,
+"Marcel Sabitzer": 5.668,
+"Marko Arnautović": 11.515,
 "Matthias Seidl": 0.463,
 "Michael Gregoritsch": 5.402,
 "Nikolaus Wurmbrand": 0.735,
@@ -119,17 +119,17 @@
 },
 "azerbaijan": {
 "Anton Kryvotsyuk": 0.25,
-"Emin Mahmudov": 1.536,
-"Ramil Sheydayev": 0.292,
+"Emin Mahmudov": 2.243,
+"Ramil Sheydayev": 0.583,
 "Renat Dadashov": 0.749,
 "Renat Dadaşov": 0.764,
-"Toral Bayramov": 1.218
+"Toral Bayramov": 1.68
 },
 "bahamas": {
 "Wood Julmis": 0.397
 },
 "bahrain": {
-"Abdulla Yusuf Helal": 0.681,
+"Abdulla Yusuf Helal": 1.034,
 "Abdullah Al-Hashash": 0.327,
 "Ali Madan": 0.681,
 "Ebrahim Al-Khattal": 0.354,
@@ -148,14 +148,14 @@
 },
 "barbados": {
 "Devonte Richards": 0.63,
-"Niall Reid-Stephen": 0.794,
-"Omani Leacock": 0.63
+"Niall Reid-Stephen": 1.191,
+"Omani Leacock": 1.26
 },
 "belarus": {
 "Denis Laptev": 0.303,
 "Denis Polyakov": 0.292,
 "Dmitry Antilevsky": 0.595,
-"German Barkovsky": 0.707,
+"German Barkovsky": 1.414,
 "Gleb Kuchko": 0.735,
 "Max Ebong": 0.792,
 "Nikita Demchenko": 0.764,
@@ -172,12 +172,12 @@
 "Charles De Ketelaere": 1.808,
 "Hans Vanaken": 1.527,
 "Jérémy Doku": 3.572,
-"Kevin De Bruyne": 5.509,
+"Kevin De Bruyne": 7.424,
 "Leandro Trossard": 1.782,
 "Maxim De Cuyper": 2.361,
-"Romelu Lukaku": 6.089,
+"Romelu Lukaku": 7.01,
 "Thomas Meunier": 1.442,
-"Youri Tielemans": 2.886
+"Youri Tielemans": 3.594
 },
 "belize": {
 "Carlos Bernárdez": 0.397
@@ -200,7 +200,7 @@
 "Ne-Jai Tucker": 0.764,
 "Reggie Lambe": 1.26,
 "Sachiel Ming": 0.397,
-"Zeiko Lewis": 1.027
+"Zeiko Lewis": 1.657
 },
 "bhutan": {
 "Chencho Gyeltshen": 0.292,
@@ -208,11 +208,11 @@
 },
 "bolivia": {
 "Bruno Miranda": 0.412,
-"Carmelo Algarañaz": 0.891,
+"Carmelo Algarañaz": 1.336,
 "Enzo Monteiro": 1.075,
 "Ervin Vaca": 0.481,
 "Henry Vaca": 0.303,
-"Miguel Terceros": 4.624,
+"Miguel Terceros": 7.264,
 "Moisés Paniagua": 1.782,
 "Ramiro Vaca": 0.749,
 "Rodrigo Ramallo": 0.292,
@@ -234,7 +234,7 @@
 },
 "botswana": {
 "Gape Mohutsiwa": 1.296,
-"Kabelo Seakanyeng": 0.7,
+"Kabelo Seakanyeng": 1.097,
 "Mogakolodi Ngele": 0.303,
 "Molaodi Tlhalefang": 0.303,
 "Mosha Gaolaolwe": 0.397,
@@ -249,11 +249,11 @@
 "Estêvão Willian": 0.707,
 "Gerson": 0.481,
 "Igor Jesus": 0.463,
-"Lucas Paquetá": 1.104,
+"Lucas Paquetá": 1.501,
 "Luiz Henrique": 0.926,
 "Matheus Cunha": 0.561,
 "Neymar": 0.561,
-"Raphinha": 2.661,
+"Raphinha": 4.148,
 "Rodrygo": 1.007,
 "Vinícius Júnior": 2.985
 },
@@ -264,7 +264,7 @@
 "Andrian Kraev": 0.481,
 "Filip Krastev": 0.764,
 "Georgi Rusev": 1.067,
-"Kiril Despodov": 1.302,
+"Kiril Despodov": 1.605,
 "Marin Petkov": 0.811,
 "Preslav Borukov": 0.281,
 "Radoslav Kirilov": 0.735,
@@ -274,14 +274,14 @@
 },
 "burkina faso": {
 "Arsène Kouassi": 0.794,
-"Bertrand Traoré": 2.149,
+"Bertrand Traoré": 3.435,
 "Blati Touré": 0.303,
 "Cyriaque Irié": 0.707,
-"Dango Ouattara": 2.114,
+"Dango Ouattara": 2.821,
 "Edmond Tapsoba": 2.208,
 "Georgi Minoungou": 0.794,
 "Josué Tiendrébéogo": 1.268,
-"Lassina Traoré": 3.271,
+"Lassina Traoré": 3.668,
 "Mohamed Konaté": 0.327,
 "Mohamed Zougrana": 1.296,
 "Pierre Landry Kaboré": 2.205
@@ -301,25 +301,25 @@
 "Christian Kofane": 1.619,
 "Frank Magri": 0.63,
 "Georges-Kévin Nkoudou": 1.01,
-"Jean-Charles Castelletto": 0.327,
 "Junior Tchamadeu": 0.825,
 "Karl Etta Eyong": 0.794,
 "Michael Ngadeu-Ngadjui": 0.397,
 "Moumi Ngamaleu": 0.735,
 "Nouhou Tolo": 0.397,
-"Vincent Aboubakar": 1.916
+"Olivier Ntcham": 0.606,
+"Vincent Aboubakar": 2.874
 },
 "canada": {
 "Cyle Larin": 1.354,
 "Ismaël Koné": 0.412,
 "Jacob Shaffelburg": 1.026,
-"Jayden Nelson": 0.26,
-"Jonathan David": 2.069,
+"Jonathan David": 2.699,
 "Jonathan Osorio": 0.26,
-"Junior Hoilett": 0.26,
+"Junior Hoilett": 0.52,
 "Nathan Saliba": 1.26,
 "Niko Sigur": 0.63,
 "Promise David": 0.63,
+"Steven Vitória": 0.52,
 "Tajon Buchanan": 1.89,
 "Tani Oluwaseyi": 0.63
 },
@@ -330,7 +330,7 @@
 "Garry Rodrigues": 0.327,
 "Jamiro Monteiro": 1.027,
 "Jovane Cabral": 0.707,
-"Ryan Mendes": 0.958,
+"Ryan Mendes": 1.285,
 "Sidny Lopes Cabral": 0.735,
 "Stopira": 0.735,
 "Telmo Arcanjo": 0.735,
@@ -362,10 +362,10 @@
 },
 "china": {
 "Behram Abduweli": 0.463,
-"Fernandinho": 0.354,
+"Fernandinho": 0.707,
 "Lin Liangming": 0.481,
 "Wang Shangyuan": 0.303,
-"Wang Yudong": 0.63,
+"Wang Yudong": 1.26,
 "Wei Shihao": 0.354,
 "Wu Lei": 1.717,
 "Xie Wenneng": 0.463,
@@ -374,16 +374,16 @@
 "colombia": {
 "Daniel Muñoz": 1.809,
 "Davinson Sánchez": 0.86,
-"James Rodríguez": 1.857,
+"James Rodríguez": 2.714,
 "Jaminton Campaz": 1.0,
 "Jefferson Lerma": 0.809,
 "Jhon Córdoba": 2.223,
 "Jhon Durán": 1.024,
 "Juan Fernando Quintero": 1.188,
-"Luis Díaz": 5.076,
+"Luis Díaz": 5.473,
 "Luis Suárez": 2.828,
-"Rafael Santos Borré": 0.584,
-"Yerry Mina": 0.707
+"Miguel Borja": 0.825,
+"Rafael Santos Borré": 0.887
 },
 "comoros": {
 "Benjaloud Youssouf": 0.303,
@@ -406,12 +406,12 @@
 "Charles Pickel": 0.561,
 "Cédric Bakambu": 2.915,
 "Fiston Mayele": 0.958,
-"Gaël Kakuta": 1.587,
+"Gaël Kakuta": 2.381,
 "Meschak Elia": 1.488,
 "Nathanaël Mbuku": 1.501,
 "Theo Bongonda": 0.735,
 "Théo Bongonda": 1.658,
-"Yoane Wissa": 3.385
+"Yoane Wissa": 3.725
 },
 "cook islands": {
 "Taci Kumsuz": 0.445
@@ -420,12 +420,12 @@
 "Alejandro Bran": 0.63,
 "Alexis Gamboa": 0.707,
 "Alonso Martínez": 4.067,
-"Francisco Calvo": 2.037,
+"Francisco Calvo": 2.667,
 "Joseph Mora": 0.63,
 "Josimar Alcócer": 2.069,
 "Juan Pablo Vargas": 0.967,
 "Kenneth Vargas": 0.707,
-"Manfred Ugalde": 3.652,
+"Manfred Ugalde": 5.541,
 "Orlando Galo": 1.777,
 "Warren Madrigal": 2.243,
 "Álvaro Zamora": 1.027
@@ -434,47 +434,47 @@
 "Amad Diallo": 4.147,
 "Bazoumana Touré": 1.619,
 "Evann Guessand": 2.09,
-"Franck Kessié": 2.137,
-"Guéla Doué": 0.825,
-"Ibrahim Sangaré": 1.038,
-"Jean-Philippe Krasso": 1.424,
+"Franck Kessié": 2.465,
+"Ibrahim Sangaré": 1.773,
+"Jean-Philippe Krasso": 1.727,
+"Karim Konaté": 0.909,
 "Oumar Diakité": 1.075,
 "Seko Fofana": 1.33,
 "Simon Adingra": 1.378,
-"Sébastien Haller": 1.545,
+"Sébastien Haller": 1.848,
 "Yan Diomande": 2.295
 },
 "croatia": {
-"Andrej Kramarić": 6.131,
-"Ante Budimir": 2.124,
+"Andrej Kramarić": 6.381,
+"Ante Budimir": 2.754,
 "Bruno Petković": 0.811,
 "Franjo Ivanović": 1.26,
-"Ivan Perišić": 3.292,
+"Ivan Perišić": 4.056,
 "Joško Gvardiol": 1.245,
 "Kristijan Jakić": 1.471,
-"Luka Modrić": 1.722,
+"Luka Modrić": 2.602,
 "Mario Pašalić": 1.452,
 "Martin Baturina": 1.463,
 "Nikola Vlašić": 1.527,
 "Petar Musa": 1.764
 },
 "cuba": {
-"Arichel Hernández": 0.26,
+"Arichel Hernández": 0.52,
 "Jorge Aguirre": 0.63,
-"Luis Paradela": 0.26,
-"Maikel Reyes": 0.657,
+"Luis Paradela": 0.52,
+"Maikel Reyes": 0.916,
 "Pedro Bravo": 0.63
 },
 "curacao": {
 "Ar'jany Martha": 0.764,
 "Gervane Kastaneer": 2.917,
 "Jeremy Antonisse": 1.26,
-"Jordi Paulina": 1.527,
+"Jordi Paulina": 2.291,
 "Juninho Bacuna": 1.791,
 "Kenji Gorré": 2.1,
-"Leandro Bacuna": 0.764,
+"Leandro Bacuna": 1.527,
 "Livano Comenencia": 1.735,
-"Rangelo Janga": 1.191,
+"Rangelo Janga": 1.587,
 "Roshon van Eijma": 0.764,
 "Sontje Hansen": 0.764,
 "Tahith Chong": 1.414
@@ -482,8 +482,8 @@
 "cyprus": {
 "Andronikos Kakoullis": 1.296,
 "Charalampos Charalampous": 0.707,
-"Grigoris Kastanos": 1.466,
-"Ioannis Pittas": 3.034,
+"Grigoris Kastanos": 2.201,
+"Ioannis Pittas": 4.019,
 "Konstantinos Laifis": 0.735,
 "Kostas Pileas": 0.303,
 "Loizos Loizou": 1.442,
@@ -496,11 +496,11 @@
 "David Douděra": 1.067,
 "Ladislav Krejčí": 3.255,
 "Lukáš Červ": 1.17,
-"Patrik Schick": 3.601,
+"Patrik Schick": 4.492,
 "Pavel Šulc": 2.824,
 "Robin Hranáč": 0.764,
 "Tomáš Chorý": 1.993,
-"Tomáš Souček": 3.134,
+"Tomáš Souček": 3.871,
 "Vladimír Coufal": 0.764,
 "Václav Černý": 2.049
 },
@@ -515,13 +515,13 @@
 "Mikkel Damsgaard": 3.097,
 "Patrick Dorgu": 1.944,
 "Pierre-Emile Højbjerg": 1.007,
-"Rasmus Højlund": 5.892,
+"Rasmus Højlund": 6.656,
 "Yussuf Poulsen": 0.737
 },
 "djibouti": {
 "Abdichakour Farah": 0.735,
-"Gabriel Dadzie": 0.794,
-"Samuel Akinbinu": 1.122
+"Gabriel Dadzie": 1.191,
+"Samuel Akinbinu": 1.684
 },
 "dominica": {
 "Audel Laville": 1.26,
@@ -529,7 +529,7 @@
 "Troy Jules": 1.027
 },
 "dominican republic": {
-"Dorny Romero": 2.054,
+"Dorny Romero": 2.45,
 "Edarlyn Reyes": 0.63,
 "Edison Azcona": 0.63,
 "Heinz Mörschel": 0.63,
@@ -541,11 +541,11 @@
 },
 "ecuador": {
 "Alan Minda": 0.878,
-"Enner Valencia": 3.237,
+"Enner Valencia": 4.425,
 "Félix Torres": 0.561,
 "Gonzalo Plata": 0.962,
 "Jeremy Sarmiento": 0.397,
-"Kendry Páez": 0.688,
+"Kendry Páez": 1.085,
 "Kevin Rodríguez": 0.704,
 "Ángel Mena": 0.303
 },
@@ -555,16 +555,16 @@
 "Ibrahim Adel": 0.735,
 "Marwan Attia": 0.825,
 "Mohamed Hamdy": 0.735,
-"Mohamed Salah": 7.912,
-"Mostafa Mohamed": 1.612,
-"Omar Marmoush": 2.653,
+"Mohamed Salah": 10.043,
+"Mostafa Mohamed": 1.94,
+"Omar Marmoush": 3.36,
 "Ramy Rabia": 0.825,
 "Trézéguet": 2.03,
 "Yasser Ibrahim": 0.825
 },
 "el salvador": {
 "Brayan Gil": 1.52,
-"Bryan Tamacas": 0.25,
+"Bryan Tamacas": 0.5,
 "Elvin Alvarado": 0.63,
 "Harold Osorio": 0.707,
 "Jairo Henríquez": 0.397,
@@ -579,10 +579,10 @@
 "Declan Rice": 1.838,
 "Eberechi Eze": 2.06,
 "Ezri Konsa": 0.707,
-"Harry Kane": 12.117,
+"Harry Kane": 15.759,
 "Jack Grealish": 0.908,
 "Jude Bellingham": 2.257,
-"Marcus Rashford": 2.249,
+"Marcus Rashford": 2.956,
 "Noni Madueke": 0.707,
 "Ollie Watkins": 0.894,
 "Trent Alexander-Arnold": 0.713
@@ -619,9 +619,9 @@
 "Philani Mkhontfo": 1.122
 },
 "ethiopia": {
-"Abubeker Nassir": 1.684,
+"Abubeker Nassir": 2.245,
 "Ayten Biniam": 0.735,
-"Bereket Desta": 1.684,
+"Bereket Desta": 2.245,
 "Minyelu Wondimu": 0.397,
 "Ramkel James": 0.735
 },
@@ -636,15 +636,15 @@
 "Odmar Færø": 0.25,
 "Patrik Johannesen": 0.63,
 "Petur Knudsen": 0.397,
-"Viljormur Davidsen": 0.927,
-"Árni Frederiksberg": 1.365
+"Viljormur Davidsen": 1.853,
+"Árni Frederiksberg": 2.1
 },
 "fiji": {
 "Etonia Dogalau": 0.794,
 "Filipe Baravilala": 0.397,
 "Merrill Nand": 0.481,
 "Nabil Begg": 0.794,
-"Roy Krishna": 3.409,
+"Roy Krishna": 5.562,
 "Setareki Hughes": 0.794,
 "Sitiveni Cavuilagi": 0.397,
 "Thomas Dunn": 1.672
@@ -655,7 +655,7 @@
 "Benjamin Källman": 2.545,
 "Daniel Håkans": 1.053,
 "Glen Kamara": 0.25,
-"Joel Pohjanpalo": 2.207,
+"Joel Pohjanpalo": 3.701,
 "Kaan Kairinen": 0.561,
 "Oliver Antman": 1.315,
 "Pyry Soiri": 0.606,
@@ -670,12 +670,12 @@
 "Florian Thauvin": 0.735,
 "Hugo Ekitike": 0.764,
 "Jean-Philippe Mateta": 1.499,
-"Kylian Mbappé": 9.771,
+"Kylian Mbappé": 13.072,
 "Maghnes Akliouche": 0.764,
 "Michael Olise": 2.662,
 "Olivier Giroud": 0.856,
 "Ousmane Dembélé": 1.31,
-"Randal Kolo Muani": 2.717
+"Randal Kolo Muani": 3.18
 },
 "gabon": {
 "Alex Moucketou-Moussounda": 0.794,
@@ -684,27 +684,27 @@
 "Guélor Kanga": 1.097,
 "Jim Allevinah": 1.261,
 "Mario Lemina": 1.499,
-"Pierre-Emerick Aubameyang": 5.252,
+"Pierre-Emerick Aubameyang": 5.814,
 "Yannis M'Bemba": 0.707
 },
 "gambia": {
 "Abdoulie Manneh": 2.205,
 "Ablie Jallow": 0.327,
 "Adama Sidibeh": 3.336,
-"Alieu Fadera": 0.707,
+"Alieu Fadera": 1.414,
 "Ebou Adams": 1.104,
-"Ebrima Colley": 0.63,
+"Ebrima Colley": 0.934,
 "Muhammed Badamosi": 0.794,
-"Musa Barrow": 3.999,
+"Musa Barrow": 4.396,
 "Sheriff Sinyan": 0.707,
 "Yankuba Minteh": 2.797
 },
 "georgia": {
 "Budu Zivzivadze": 0.988,
-"Georges Mikautadze": 6.315,
+"Georges Mikautadze": 7.4,
 "Giorgi Chakvetadze": 1.287,
 "Giorgi Kochorashvili": 2.187,
-"Khvicha Kvaratskhelia": 4.019,
+"Khvicha Kvaratskhelia": 4.464,
 "Levan Shengelia": 0.292,
 "Luka Lochoshvili": 0.764,
 "Nika Gagnidze": 0.707,
@@ -716,8 +716,8 @@
 "Felix Nmecha": 1.481,
 "Florian Wirtz": 3.554,
 "Jamal Musiala": 3.678,
-"Joshua Kimmich": 2.476,
-"Kai Havertz": 3.72,
+"Joshua Kimmich": 3.773,
+"Kai Havertz": 5.959,
 "Leroy Sané": 2.009,
 "Nick Woltemade": 3.026,
 "Niclas Füllkrug": 1.239,
@@ -732,7 +732,7 @@
 "Caleb Yirenkyi": 1.0,
 "Ernest Nuamah": 0.958,
 "Iñaki Williams": 0.864,
-"Jordan Ayew": 4.245,
+"Jordan Ayew": 5.858,
 "Kamaldeen Sulemana": 0.735,
 "Mohammed Kudus": 1.951,
 "Mohammed Salisu": 1.296,
@@ -743,10 +743,10 @@
 "Ethan Britto": 0.463,
 "James Scanlon": 1.075,
 "Liam Jessop": 0.764,
-"Liam Walker": 0.927
+"Liam Walker": 1.408
 },
 "greece": {
-"Anastasios Bakasetas": 2.768,
+"Anastasios Bakasetas": 3.122,
 "Christos Tzolis": 3.693,
 "Dimitrios Kourbelis": 1.061,
 "Dimitrios Pelkas": 0.634,
@@ -756,7 +756,7 @@
 "Konstantinos Karetsas": 2.032,
 "Konstantinos Mavropanos": 0.561,
 "Kostas Tsimikas": 0.735,
-"Tasos Bakasetas": 0.776,
+"Tasos Bakasetas": 1.026,
 "Vangelis Pavlidis": 1.633
 },
 "grenada": {
@@ -765,15 +765,15 @@
 "Joshua Isaac": 0.63,
 "Kayden Harrack": 0.63,
 "Keishean Francois": 0.63,
-"Myles Hippolyte": 0.794,
+"Myles Hippolyte": 1.191,
 "Regan Charles-Cook": 0.63,
 "Saydrel Lewis": 0.63
 },
 "guadeloupe": {
 "Andreaw Gravillon": 0.26,
-"Ange-Freddy Plumain": 1.15,
+"Ange-Freddy Plumain": 2.039,
 "Anthony Baron": 0.26,
-"Florian David": 0.63,
+"Florian David": 1.26,
 "Jordan Leborgne": 0.63,
 "Matthias Phaëton": 1.15,
 "Thierry Ambrose": 0.88
@@ -787,7 +787,7 @@
 "Arquímides Ordóñez": 0.764,
 "Darwin Lom": 1.749,
 "José Carlos Martínez": 0.397,
-"José Carlos Pinto": 1.027,
+"José Carlos Pinto": 2.054,
 "Nicolás Samayoa": 0.63,
 "Olger Escobar": 2.048,
 "Oscar Santis": 1.89,
@@ -799,7 +799,7 @@
 "Abdoul Karim Traoré": 2.205,
 "Aguibou Camara": 1.027,
 "Aliou Baldé": 0.735,
-"Mohamed Bayo": 0.995,
+"Mohamed Bayo": 1.335,
 "Morlaye Sylla": 0.397,
 "Ousmane Camara": 0.707,
 "Serhou Guirassy": 0.707,
@@ -825,7 +825,7 @@
 "Bryan Labissiere": 0.397,
 "Danley Jean Jacques": 1.615,
 "Don Deedson Louicius": 2.129,
-"Duckens Nazon": 4.133,
+"Duckens Nazon": 4.383,
 "Duke Lacroix": 0.397,
 "Frantzdy Pierrot": 2.533,
 "Jean-Kévin Duverne": 0.397,
@@ -861,7 +861,7 @@
 "Attila Szalai": 0.735,
 "Barnabás Varga": 5.159,
 "Bálint Vécsei": 0.223,
-"Dominik Szoboszlai": 3.262,
+"Dominik Szoboszlai": 4.498,
 "Dániel Lukács": 1.499,
 "Kevin Csoboth": 0.397,
 "Martin Ádám": 0.526,
@@ -872,10 +872,10 @@
 },
 "iceland": {
 "Albert Guðmundsson": 4.355,
-"Alfreð Finnbogason": 0.822,
+"Alfreð Finnbogason": 1.072,
 "Andri Guðjohnsen": 2.177,
-"Aron Gunnarsson": 0.668,
-"Gylfi Sigurðsson": 0.583,
+"Aron Gunnarsson": 0.891,
+"Gylfi Sigurðsson": 0.875,
 "Hákon Arnar Haraldsson": 0.795,
 "Kristian Hlynsson": 1.442,
 "Mikael Egill Ellertsson": 0.958,
@@ -887,29 +887,29 @@
 "india": {
 "Lallianzuala Chhangte": 0.397,
 "Manvir Singh": 0.303,
-"Sunil Chhetri": 0.354
+"Sunil Chhetri": 0.707
 },
 "indonesia": {
+"Asnawi Mangkualam": 0.655,
 "Dimas Drajad": 0.875,
 "Egy Maulana Vikri": 0.645,
 "Hokky Caraka": 0.583,
-"Kevin Diks": 1.47,
+"Kevin Diks": 2.939,
 "Marselino Ferdinan": 1.29,
-"Ole Romeny": 1.752,
-"Rafael Struick": 0.463,
+"Ole Romeny": 2.382,
 "Ragnar Oratmangoen": 0.816,
-"Ramadhan Sananta": 1.228,
+"Ramadhan Sananta": 1.52,
 "Rizky Ridho": 0.98,
 "Sandy Walsh": 0.773,
 "Thom Haye": 0.86
 },
 "iran": {
-"Alireza Jahanbakhsh": 0.68,
+"Alireza Jahanbakhsh": 1.361,
 "Amirhossein Hosseinzadeh": 0.63,
 "Hossein Kanaanizadegan": 0.707,
 "Karim Ansarifard": 0.327,
 "Mehdi Ghayedi": 1.935,
-"Mehdi Taremi": 5.458,
+"Mehdi Taremi": 6.579,
 "Mohammad Mehdi Mohebi": 0.63,
 "Mohammad Mohebi": 3.68,
 "Omid Noorafkan": 0.354,
@@ -921,8 +921,8 @@
 "Akam Hashim": 0.561,
 "Ali Al-Hamadi": 1.958,
 "Ali Jasim": 0.794,
-"Amir Al-Ammari": 1.117,
-"Aymen Hussein": 7.288,
+"Amir Al-Ammari": 1.881,
+"Aymen Hussein": 8.366,
 "Hussein Ali": 0.397,
 "Ibrahim Bayesh": 1.024,
 "Mohanad Ali": 1.748,
@@ -934,27 +934,27 @@
 "israel": {
 "Dan Biton": 1.26,
 "Dor Peretz": 2.344,
-"Dor Turgeman": 1.325,
+"Dor Turgeman": 2.089,
 "Eli Dasa": 0.561,
 "Eliel Peretz": 0.764,
-"Eran Zahavi": 0.657,
+"Eran Zahavi": 1.01,
 "Manor Solomon": 0.957,
-"Mohammad Abu Fani": 2.1,
+"Mohammad Abu Fani": 2.73,
 "Oscar Gloukh": 1.238,
 "Roy Revivo": 0.764,
-"Shon Weissman": 0.553,
+"Shon Weissman": 0.803,
 "Tai Baribo": 0.707
 },
 "italy": {
 "Alessandro Bastoni": 1.104,
 "Andrea Cambiaso": 1.574,
+"Ciro Immobile": 0.781,
 "Davide Frattesi": 2.457,
 "Federico Chiesa": 0.856,
-"Giacomo Raspadori": 3.354,
+"Giacomo Raspadori": 3.915,
 "Gianluca Mancini": 1.499,
 "Giovanni Di Lorenzo": 0.926,
-"Mateo Retegui": 4.99,
-"Matteo Politano": 0.707,
+"Mateo Retegui": 6.188,
 "Moise Kean": 6.206,
 "Pio Esposito": 2.262,
 "Sandro Tonali": 2.64
@@ -970,11 +970,11 @@
 "Kasey Palmer": 0.707,
 "Leon Bailey": 0.88,
 "Renaldo Cephas": 1.471,
-"Shamar Nicholson": 2.633,
+"Shamar Nicholson": 3.029,
 "Warner Brown": 1.89
 },
 "japan": {
-"Ayase Ueda": 4.113,
+"Ayase Ueda": 4.885,
 "Daichi Kamada": 3.587,
 "Hidemasa Morita": 1.712,
 "Keito Nakamura": 2.121,
@@ -982,30 +982,30 @@
 "Kōki Ogawa": 1.425,
 "Mao Hosoya": 0.933,
 "Ritsu Dōan": 1.424,
-"Ryōya Morishita": 0.63,
 "Takefusa Kubo": 2.267,
 "Takumi Minamino": 2.424,
+"Yuki Soma": 0.794,
 "Yukinari Sugawara": 0.784
 },
 "jordan": {
 "Abdallah Nasib": 0.561,
-"Ali Olwan": 5.317,
+"Ali Olwan": 6.763,
 "Ibrahim Sadeh": 0.397,
 "Mahmoud Al-Mardi": 0.655,
 "Mohammad Abu Zrayq": 0.354,
-"Musa Al-Taamari": 3.769,
+"Musa Al-Taamari": 4.097,
 "Nizar Al-Rashdan": 0.327,
 "Noor Al-Rawabdeh": 0.842,
 "Saed Al-Rosan": 0.354,
 "Yazan Al-Arab": 0.889,
-"Yazan Al-Naimat": 4.686
+"Yazan Al-Naimat": 5.04
 },
 "kazakhstan": {
-"Abat Aymbetov": 0.776,
+"Abat Aymbetov": 1.079,
 "Aleksandr Marochkin": 0.561,
 "Alibek Kasym": 0.735,
-"Askhat Tagybergen": 1.034,
-"Bakhtiyar Zaynutdinov": 1.056,
+"Askhat Tagybergen": 1.845,
+"Bakhtiyar Zaynutdinov": 1.57,
 "Baktiyor Zainutdinov": 0.735,
 "Dastan Satpayev": 0.764,
 "Dinmukhamed Karaman": 0.735,
@@ -1019,7 +1019,7 @@
 "Collins Sichenje": 0.707,
 "Duke Abuya": 0.397,
 "Masoud Juma": 0.606,
-"Michael Olunga": 3.143,
+"Michael Olunga": 4.411,
 "Mohammed Bajaber": 0.561,
 "Rooney Onyango": 0.303,
 "Ryan Ogam": 2.856,
@@ -1036,15 +1036,15 @@
 "Lumbardh Dellova": 1.007,
 "Milot Rashica": 0.886,
 "Muharrem Jashari": 0.481,
-"Vedat Muriqi": 4.093,
+"Vedat Muriqi": 4.788,
 "Veldin Hodža": 0.891
 },
 "kuwait": {
 "Athbi Saleh": 0.303,
 "Eid Al Rashidi": 0.397,
 "Mohammad Daham": 1.619,
-"Shabaib Al-Khaldi": 0.606,
-"Yousef Nasser": 2.494
+"Shabaib Al-Khaldi": 0.909,
+"Yousef Nasser": 3.402
 },
 "kyrgyzstan": {
 "Aleksandr Mishchenko": 0.561,
@@ -1052,13 +1052,13 @@
 "Eldiyar Zarypbekov": 0.397,
 "Ernist Batyrkanov": 0.303,
 "Gulzhigit Alykulov": 1.027,
-"Joel Kojo": 2.796,
+"Joel Kojo": 3.277,
 "Kai Merk": 1.287,
 "Kayrat Zhyrgalbek uulu": 0.303,
 "Khristiyan Brauzman": 0.816,
 "Kimi Merk": 0.354,
 "Odilzhon Abdurakhmanov": 0.749,
-"Valery Kichin": 0.915
+"Valery Kichin": 1.268
 },
 "laos": {
 "Bounphachan Bounkong": 0.292
@@ -1074,11 +1074,11 @@
 "Kristers Tobers": 0.25,
 "Renārs Varslavāns": 0.445,
 "Roberts Uldriķis": 0.481,
-"Vladislavs Gutkovskis": 1.499
+"Vladislavs Gutkovskis": 2.233
 },
 "lebanon": {
 "Bassel Jradi": 0.327,
-"Hassan Maatouk": 1.191,
+"Hassan Maatouk": 1.587,
 "Majed Osman": 0.303,
 "Nader Matar": 0.397
 },
@@ -1090,7 +1090,7 @@
 "Rethabile Rasethuntša": 0.397
 },
 "liberia": {
-"Ayouba Kosiah": 2.149,
+"Ayouba Kosiah": 2.884,
 "Edward Ledlum": 0.735,
 "Jimmy Farkarlun": 0.561,
 "Nicholas Andrews": 1.296,
@@ -1102,7 +1102,7 @@
 "Abdulmunem Aleiyan": 0.303,
 "Ahmed Krawa'a": 0.7,
 "Ezoo El Maremi": 2.71,
-"Faisal Al Badri": 0.397,
+"Faisal Al Badri": 0.794,
 "Mahmoud Al-Shalui": 0.735,
 "Muad Eisay": 0.707,
 "Muaid Ellafi": 0.561
@@ -1110,15 +1110,15 @@
 "liechtenstein": {
 "Aron Sele": 0.481,
 "Ferhat Saglam": 0.445,
-"Nicolas Hasler": 0.445,
+"Nicolas Hasler": 0.891,
 "Sandro Wolfinger": 0.281
 },
 "lithuania": {
-"Armandas Kučys": 2.617,
+"Armandas Kučys": 3.08,
 "Edvinas Girdvainis": 0.957,
 "Fedor Černych": 0.926,
 "Giedrius Matulevicius": 0.397,
-"Gvidas Gineitis": 2.457,
+"Gvidas Gineitis": 3.164,
 "Gytis Paulauskas": 0.561,
 "Paulius Golubickas": 0.463,
 "Pijus Širvys": 1.61
@@ -1126,9 +1126,9 @@
 "luxembourg": {
 "Aiman Dardari": 0.707,
 "Danel Sinani": 0.781,
-"Gerson Rodrigues": 2.395,
+"Gerson Rodrigues": 3.161,
 "Mathias Olesen": 0.303,
-"Maxime Chanot": 0.281,
+"Maxime Chanot": 0.561,
 "Seid Korać": 0.481,
 "Yvandro Borges Sanches": 0.531
 },
@@ -1156,7 +1156,7 @@
 },
 "malaysia": {
 "Adib Raop": 0.397,
-"Arif Aiman Hanapi": 0.327,
+"Arif Aiman Hanapi": 0.655,
 "Darren Lok": 0.303,
 "Dion Cools": 0.606,
 "Faisal Halim": 0.63,
@@ -1173,9 +1173,9 @@
 "Gaoussou Diarra": 0.735,
 "Hamari Traoré": 0.327,
 "Ibrahim Sissoko": 0.303,
-"Kamory Doumbia": 4.302,
+"Kamory Doumbia": 5.009,
 "Lassana Coulibaly": 0.707,
-"Lassine Sinayoko": 4.864,
+"Lassine Sinayoko": 6.483,
 "Nene Dorgeles": 0.34,
 "Youssoufou Niakaté": 0.303
 },
@@ -1185,11 +1185,11 @@
 "Jake Grech": 0.764,
 "Paul Mbong": 0.292,
 "Ryan Camenzuli": 0.445,
-"Teddy Teuma": 1.227,
+"Teddy Teuma": 2.453,
 "Yannick Yankam": 0.223
 },
 "martinique": {
-"Brighton Labeau": 0.26,
+"Brighton Labeau": 0.52,
 "Jonathan Mexique": 0.26,
 "Karl Fabien": 0.25,
 "Kévin Fortuné": 0.25,
@@ -1221,14 +1221,14 @@
 "Julián Quiñones": 1.0,
 "Luis Chávez": 0.51,
 "Luis Romo": 0.5,
-"Orbelín Pineda": 0.51,
+"Orbelín Pineda": 0.77,
 "Raúl Jiménez": 2.939,
 "Santiago Giménez": 0.51,
 "Érick Sánchez": 0.26
 },
 "moldova": {
 "Artur Ioniță": 0.463,
-"Ion Nicolaescu": 2.785,
+"Ion Nicolaescu": 3.453,
 "Maxim Cojocaru": 0.463,
 "Mihail Caimacov": 1.007,
 "Vadim Rață": 0.281,
@@ -1242,7 +1242,7 @@
 "Edvin Kuč": 0.864,
 "Marko Tući": 0.561,
 "Milutin Osmajić": 0.764,
-"Nikola Krstović": 3.474,
+"Nikola Krstović": 4.238,
 "Slobodan Rubežić": 0.303,
 "Stefan Savić": 0.561,
 "Stevan Jovetić": 1.437,
@@ -1257,10 +1257,10 @@
 "Ayoub El Kaabi": 4.279,
 "Azzedine Ounahi": 1.431,
 "Bilal El Khannouss": 0.561,
-"Brahim Díaz": 4.592,
+"Brahim Díaz": 5.947,
 "Chadi Riad": 0.397,
 "Eliesse Ben Seghir": 0.397,
-"Hakim Ziyech": 1.027,
+"Hakim Ziyech": 1.424,
 "Hamza Igamane": 1.414,
 "Ismael Saibari": 3.8,
 "Nayef Aguerd": 0.561,
@@ -1272,7 +1272,7 @@
 "Clésio": 0.63,
 "Diogo Calila": 0.794,
 "Faisal Bangal": 1.501,
-"Geny Catamo": 3.608,
+"Geny Catamo": 5.126,
 "Jonathan Muiomo": 0.303,
 "Pepo Santos": 1.122,
 "Reinildo Mandava": 1.062,
@@ -1303,28 +1303,28 @@
 },
 "netherlands": {
 "Calvin Stengs": 0.909,
-"Cody Gakpo": 6.527,
+"Cody Gakpo": 9.522,
 "Crysencio Summerville": 1.0,
 "Denzel Dumfries": 2.727,
 "Donyell Malen": 3.833,
-"Memphis Depay": 6.718,
+"Memphis Depay": 8.644,
 "Noa Lang": 0.88,
 "Teun Koopmeiners": 0.784,
 "Tijjani Reijnders": 2.951,
-"Virgil van Dijk": 2.656,
-"Wout Weghorst": 2.188,
-"Xavi Simons": 2.813
+"Virgil van Dijk": 2.948,
+"Wout Weghorst": 2.669,
+"Xavi Simons": 3.374
 },
 "new caledonia": {
 "Georges Gope-Fenepej": 1.585,
 "Germain Haewegene": 0.463,
 "Gérard Waia": 0.481,
 "Jean-Jacques Katrawa": 0.481,
-"Joseph Athale": 1.425,
+"Joseph Athale": 2.85,
 "Lues Waya": 0.561
 },
 "new zealand": {
-"Ben Waine": 2.531,
+"Ben Waine": 3.013,
 "Callum McCowatt": 0.962,
 "Chris Wood": 4.552,
 "Elijah Just": 4.383,
@@ -1339,7 +1339,7 @@
 },
 "nicaragua": {
 "Bancy Hernández": 1.557,
-"Byron Bonilla": 0.707,
+"Byron Bonilla": 1.414,
 "Harold Medina": 0.397,
 "Jacob Montes": 0.397,
 "Jaime Moreno": 2.187,
@@ -1365,10 +1365,10 @@
 "Tolu Arokodare": 0.707,
 "Victor Osimhen": 9.011,
 "Wilfred Ndidi": 0.794,
-"William Troost-Ekong": 1.743
+"William Troost-Ekong": 3.145
 },
 "north korea": {
-"Choe Ju-song": 0.303,
+"Choe Ju-song": 0.606,
 "Han Kwang-song": 0.303,
 "Jong Il-gwan": 1.769,
 "Kang Kuk-chol": 0.445,
@@ -1376,14 +1376,14 @@
 "Pak Kwang-hun": 1.191,
 "Ri Hyong-jin": 0.303,
 "Ri Il-song": 0.842,
-"Ri Jo-guk": 1.821
+"Ri Jo-guk": 2.217
 },
 "north macedonia": {
 "Aleksandar Trajkovski": 1.191,
 "Bojan Miovski": 3.276,
 "Darko Churlinov": 0.93,
 "Elif Elmas": 1.216,
-"Enis Bardhi": 3.167,
+"Enis Bardhi": 3.862,
 "Ezgjan Alioski": 0.63,
 "Isnik Alimi": 0.463,
 "Jani Atanasov": 1.069,
@@ -1395,9 +1395,9 @@
 "northern ireland": {
 "Conor Bradley": 0.481,
 "Daniel Ballard": 0.927,
-"Dion Charles": 1.23,
+"Dion Charles": 1.711,
 "Isaac Price": 3.161,
-"Jamie Donley": 0.764,
+"Jamie Donley": 1.527,
 "Jamie Reid": 0.707,
 "Josh Magennis": 0.755,
 "Justin Devenny": 0.707,
@@ -1411,25 +1411,25 @@
 "Antonio Nusa": 2.837,
 "Aron Dønnum": 0.864,
 "David Møller Wolfe": 0.561,
-"Erling Haaland": 18.087,
+"Erling Haaland": 18.587,
 "Felix Horn Myhre": 1.153,
 "Julian Ryerson": 0.561,
 "Jørgen Strand Larsen": 1.067,
 "Kristoffer Ajer": 0.561,
 "Leo Østigård": 1.0,
 "Martin Ødegaard": 0.988,
-"Thelo Aasgaard": 3.39
+"Thelo Aasgaard": 4.097
 },
 "oman": {
 "Abdullah Fawaz": 0.463,
 "Abdulrahman Al-Mushaifri": 2.116,
 "Ali Al-Busaidi": 0.561,
-"Issam Al-Sabhi": 1.545,
+"Issam Al-Sabhi": 2.175,
 "Mataz Saleh": 0.303,
 "Mohammed Al-Ghafri": 0.354,
 "Muhsen Al-Ghassani": 1.625,
-"Omar Al-Malki": 0.657,
-"Salaah Al-Yahyaei": 0.327
+"Omar Al-Malki": 1.01,
+"Salaah Al-Yahyaei": 0.655
 },
 "pakistan": {
 "Harun Hamid": 0.292,
@@ -1442,7 +1442,7 @@
 "Oday Kharoub": 0.63,
 "Shehab Qunbar": 0.707,
 "Tamer Seyam": 1.519,
-"Wessam Abou Ali": 2.1,
+"Wessam Abou Ali": 3.192,
 "Zaid Qunbar": 1.271
 },
 "panama": {
@@ -1451,10 +1451,10 @@
 "Cristian Martínez": 1.027,
 "César Blackman": 1.161,
 "César Yanis": 1.042,
-"Eduardo Guerrero": 1.672,
-"Eric Davis": 1.394,
+"Eduardo Guerrero": 2.302,
+"Eric Davis": 2.157,
 "Fidel Escobar": 0.89,
-"Ismael Díaz": 6.184,
+"Ismael Díaz": 7.444,
 "José Fajardo": 3.205,
 "José Luis Rodríguez": 1.557,
 "Tomás Rodríguez": 1.89
@@ -1469,7 +1469,7 @@
 "paraguay": {
 "Antonio Sanabria": 1.699,
 "Diego Gómez": 0.445,
-"Julio Enciso": 2.069,
+"Julio Enciso": 2.699,
 "Júnior Alonso": 0.561,
 "Matías Galarza": 1.337,
 "Maurício": 1.0,
@@ -1497,16 +1497,16 @@
 "Jakub Piotrowski": 0.657,
 "Karol Świderski": 2.528,
 "Matty Cash": 1.414,
-"Nicola Zalewski": 1.799,
+"Nicola Zalewski": 2.245,
 "Paweł Wszołek": 0.764,
 "Piotr Zieliński": 2.934,
-"Robert Lewandowski": 5.311,
+"Robert Lewandowski": 6.434,
 "Sebastian Szymański": 2.288
 },
 "portugal": {
 "Bernardo Silva": 2.262,
-"Bruno Fernandes": 5.271,
-"Cristiano Ronaldo": 10.339,
+"Bruno Fernandes": 6.798,
+"Cristiano Ronaldo": 12.333,
 "Francisco Conceição": 1.791,
 "Francisco Trincão": 1.122,
 "Gonçalo Ramos": 2.178,
@@ -1519,7 +1519,7 @@
 },
 "puerto rico": {
 "Darren Ríos": 0.397,
-"Jeremy de León": 0.794,
+"Jeremy de León": 1.191,
 "Leandro Antonetti": 1.027,
 "Nicolás Cardona": 0.397,
 "Roberto Ydrach": 0.397,
@@ -1529,9 +1529,9 @@
 "qatar": {
 "Ahmed Al Ganehi": 0.561,
 "Ahmed Al-Rawi": 1.312,
-"Ahmed Alaaeldin": 0.864,
-"Akram Afif": 4.384,
-"Almoez Ali": 5.224,
+"Ahmed Alaaeldin": 1.167,
+"Akram Afif": 6.177,
+"Almoez Ali": 5.83,
 "Boualem Khoukhi": 0.735,
 "Hassan Al-Haydos": 1.298,
 "Ibrahim Al-Hassan": 0.908,
@@ -1541,7 +1541,7 @@
 "Ró-Ró": 0.63
 },
 "republic of ireland": {
-"Adam Idah": 1.799,
+"Adam Idah": 2.08,
 "Callum Robinson": 0.292,
 "Evan Ferguson": 3.733,
 "Finn Azaz": 0.561,
@@ -1550,19 +1550,19 @@
 "Mikey Johnston": 0.542,
 "Nathan Collins": 0.25,
 "Robbie Brady": 0.463,
-"Troy Parrott": 4.709
+"Troy Parrott": 6.364
 },
 "romania": {
-"Andrei Rațiu": 0.764,
 "Daniel Bîrligea": 1.245,
 "Denis Alibec": 1.368,
 "Denis Drăguș": 2.719,
 "Dennis Man": 2.525,
 "Florin Tănase": 1.26,
 "Florinel Coman": 0.773,
-"Ianis Hagi": 1.92,
+"Ianis Hagi": 2.481,
+"Louis Munteanu": 1.527,
 "Nicolae Stanciu": 1.192,
-"Răzvan Marin": 4.426,
+"Răzvan Marin": 7.492,
 "Valentin Mihăilă": 1.226,
 "Ștefan Baiaram": 0.764
 },
@@ -1579,19 +1579,19 @@
 "Tyreece Simpson": 0.63
 },
 "saint lucia": {
-"Caniggia Elva": 1.657,
+"Caniggia Elva": 2.917,
 "Peter Pearson": 0.397,
 "Ridel Stanislas": 0.397
 },
 "saint vincent and the grenadines": {
-"Cornelius Stewart": 0.63,
+"Cornelius Stewart": 1.26,
 "Kirtney Franklyn": 0.63,
 "Kyle Edwards": 0.63,
 "Micah Joseph": 0.63,
 "Oalex Anderson": 2.684
 },
 "samoa": {
-"Dilo Tumua": 0.445,
+"Dilo Tumua": 0.891,
 "Jarvis Vaai": 0.445,
 "Jefferson Faamatau": 0.445,
 "Luke Salisbury": 0.842,
@@ -1600,10 +1600,10 @@
 },
 "san marino": {
 "Alessandro Golinucci": 0.773,
-"Filippo Berardi": 0.303,
+"Filippo Berardi": 0.606,
 "Lorenzo Lazzari": 0.481,
 "Nicko Sensoli": 0.445,
-"Nicola Nanni": 0.962,
+"Nicola Nanni": 1.924,
 "Nicolas Giacopetti": 0.764,
 "Samuele Zannoni": 0.561,
 "Simone Franciosi": 0.303
@@ -1611,7 +1611,7 @@
 "sao tome and principe": {
 "Denilson Silva": 0.397,
 "Dola": 0.561,
-"Ronaldo Afonso": 2.149
+"Ronaldo Afonso": 4.298
 },
 "saudi arabia": {
 "Abdulelah Al-Amri": 1.0,
@@ -1620,11 +1620,11 @@
 "Abdulrahman Ghareeb": 0.63,
 "Ali Al-Bulaihi": 0.327,
 "Ali Lajami": 0.397,
-"Firas Al-Buraikan": 3.247,
+"Firas Al-Buraikan": 3.982,
 "Hassan Kadesh": 0.891,
 "Musab Al-Juwayr": 1.472,
 "Saleh Abu Al-Shamat": 0.735,
-"Saleh Al-Shehri": 1.842,
+"Saleh Al-Shehri": 2.775,
 "Salem Al-Dawsari": 0.915
 },
 "scotland": {
@@ -1639,26 +1639,26 @@
 "Lewis Ferguson": 0.735,
 "Lyndon Dykes": 0.985,
 "Ryan Christie": 1.962,
-"Scott McTominay": 5.072
+"Scott McTominay": 5.633
 },
 "senegal": {
 "Abdoulaye Seck": 1.121,
-"Cherif Ndiaye": 2.322,
+"Cherif Ndiaye": 3.116,
 "Habib Diallo": 2.58,
 "Ibrahim Mbaye": 1.825,
 "Iliman Ndiaye": 1.887,
 "Ismaïla Sarr": 2.194,
 "Kalidou Koulibaly": 0.707,
 "Lamine Camara": 0.958,
-"Nicolas Jackson": 3.029,
+"Nicolas Jackson": 3.764,
 "Pape Gueye": 2.684,
 "Pape Matar Sarr": 2.279,
-"Sadio Mané": 4.757
+"Sadio Mané": 5.06
 },
 "serbia": {
 "Aleksa Terzić": 0.481,
 "Aleksandar Katai": 0.764,
-"Aleksandar Mitrović": 4.513,
+"Aleksandar Mitrović": 5.878,
 "Aleksandar Stanković": 0.764,
 "Dušan Tadić": 0.514,
 "Dušan Vlahović": 2.671,
@@ -1702,7 +1702,7 @@
 "Juraj Kucka": 0.553,
 "Lukáš Haraslín": 2.183,
 "Martin Valjent": 0.891,
-"Ondrej Duda": 1.426,
+"Ondrej Duda": 2.175,
 "Tomáš Bobček": 0.764,
 "Tomáš Rigo": 0.707,
 "Tomáš Suslov": 0.695
@@ -1711,7 +1711,7 @@
 "Adam Gnezda Čerin": 1.334,
 "Andraž Šporar": 0.811,
 "Benjamin Verbič": 0.303,
-"Benjamin Šeško": 3.653,
+"Benjamin Šeško": 5.174,
 "David Brekalo": 0.223,
 "Erik Janža": 0.992,
 "Jan Mlakar": 0.744,
@@ -1737,9 +1737,9 @@
 "Jayden Adams": 0.561,
 "Lyle Foster": 2.856,
 "Mohau Nkota": 0.707,
-"Oswin Appollis": 3.029,
-"Percy Tau": 0.63,
-"Teboho Mokoena": 0.668,
+"Oswin Appollis": 3.823,
+"Percy Tau": 0.958,
+"Teboho Mokoena": 1.008,
 "Thalente Mbatha": 0.735,
 "Thapelo Morena": 0.794,
 "Themba Zwane": 1.052,
@@ -1748,33 +1748,33 @@
 "south korea": {
 "Bae Jun-ho": 0.878,
 "Cho Gue-sung": 0.63,
-"Hwang Hee-chan": 2.047,
+"Hwang Hee-chan": 2.387,
 "Hwang In-beom": 1.327,
+"Hwang Ui-jo": 0.606,
 "Joo Min-kyu": 0.842,
 "Kim Jin-gyu": 0.63,
 "Lee Jae-sung": 2.471,
 "Lee Kang-in": 3.106,
 "Oh Hyeon-gyu": 3.186,
 "Oh Se-hun": 0.944,
-"Park Jin-seob": 0.354,
-"Son Heung-min": 4.813
+"Son Heung-min": 6.252
 },
 "south sudan": {
 "Keer Majak": 0.707,
 "Omot Sebit": 0.561
 },
 "spain": {
+"Bryan Zaragoza": 0.962,
 "Dani Olmo": 2.489,
 "Fabián Ruiz": 1.685,
 "Ferran Torres": 3.177,
 "Joselu": 1.725,
-"Lamine Yamal": 2.817,
+"Lamine Yamal": 3.447,
 "Martin Zubimendi": 1.227,
 "Mikel Merino": 6.182,
-"Mikel Oyarzabal": 7.417,
+"Mikel Oyarzabal": 9.477,
 "Nico Williams": 2.281,
 "Pedri": 2.044,
-"Álex Baena": 0.744,
 "Álvaro Morata": 1.993
 },
 "sri lanka": {
@@ -1783,7 +1783,7 @@
 "sudan": {
 "Aamir Abdallah": 0.825,
 "Mohamed Abdelrahman": 0.397,
-"Mohamed Eisa": 0.864,
+"Mohamed Eisa": 1.167,
 "Seif Teiri": 0.397,
 "Walieldin Khedr": 0.397,
 "Yaser Muzmel": 0.397
@@ -1796,9 +1796,9 @@
 "Liam van Gelderen": 0.891,
 "Radinio Balker": 0.707,
 "Richonell Margaret": 2.892,
-"Shaquille Pinas": 1.027,
-"Sheraldo Becker": 0.397,
-"Tjaronn Chery": 0.764,
+"Shaquille Pinas": 1.657,
+"Sheraldo Becker": 0.794,
+"Tjaronn Chery": 1.527,
 "Tyrone Conraad": 0.794,
 "Virgil Misidjan": 0.735
 },
@@ -1813,33 +1813,33 @@
 "Mattias Svanberg": 1.0,
 "Sebastian Nanasi": 0.926,
 "Viktor Claesson": 0.584,
-"Viktor Gyökeres": 9.563,
+"Viktor Gyökeres": 10.9,
 "Yasin Ayari": 3.17
 },
 "switzerland": {
-"Breel Embolo": 4.694,
+"Andi Zeqiri": 0.962,
+"Breel Embolo": 5.694,
 "Dan Ndoye": 1.868,
-"Granit Xhaka": 2.002,
+"Granit Xhaka": 3.501,
 "Johan Manzambi": 1.499,
 "Manuel Akanji": 0.999,
-"Nico Elvedi": 0.707,
 "Remo Freuler": 1.39,
 "Ruben Vargas": 1.226,
 "Rubén Vargas": 0.764,
 "Silvan Widmer": 0.93,
-"Xherdan Shaqiri": 0.969,
-"Zeki Amdouni": 2.877
+"Xherdan Shaqiri": 1.25,
+"Zeki Amdouni": 3.34
 },
 "syria": {
 "Alaa Al Dali": 0.354,
 "Alaa Al-Dali": 0.354,
 "Ibrahim Hesar": 0.354,
 "Moayad Ajan": 0.707,
-"Omar Al Somah": 0.303,
-"Omar Khribin": 1.715
+"Omar Al Somah": 0.606,
+"Omar Khribin": 2.396
 },
 "tahiti": {
-"Benoît Mathon": 0.962,
+"Benoît Mathon": 1.443,
 "Eddy Kaspard": 0.481,
 "Matéo Degrumelle": 0.794,
 "Teaonui Tehau": 1.672
@@ -1848,7 +1848,7 @@
 "Ange Kouamé": 0.292,
 "Chen Ting-yang": 0.292,
 "Ko Yu-ting": 0.292,
-"Wu Yen-shu": 0.645,
+"Wu Yen-shu": 0.999,
 "Yu Chia-huang": 0.292,
 "Yu Yao-hsing": 0.98
 },
@@ -1868,7 +1868,7 @@
 "Feisal Salum": 0.794,
 "Junior Waziri": 0.397,
 "Selemani Mwalimu": 0.707,
-"Simon Msuva": 1.121
+"Simon Msuva": 1.915
 },
 "thailand": {
 "Jaroensak Wonggorn": 0.397,
@@ -1886,17 +1886,17 @@
 },
 "tonga": {
 "Christopher Kefu": 0.445,
-"Hemaloto Polovili": 0.445,
+"Hemaloto Polovili": 0.891,
 "Ulafala Sonasi": 0.445,
 "Viliami Tikoipau": 0.445
 },
 "trinidad and tobago": {
 "Ajani Fortune": 0.88,
-"Alvin Jones": 0.647,
+"Alvin Jones": 1.044,
 "Dante Sealy": 2.625,
 "Duane Muckette": 0.794,
 "Justin Garcia": 0.63,
-"Kevin Molino": 1.394,
+"Kevin Molino": 2.024,
 "Kobi Henry": 1.499,
 "Levi García": 1.26,
 "Malcolm Shaw": 0.794,
@@ -1905,25 +1905,25 @@
 "Tyrese Spicer": 1.47
 },
 "tunisia": {
-"Ali Abdi": 1.529,
-"Elias Achouri": 2.149,
+"Ali Abdi": 3.057,
+"Elias Achouri": 2.71,
 "Elias Saad": 2.177,
 "Ellyes Skhiri": 0.794,
 "Ferjani Sassi": 1.442,
 "Firas Chaouat": 1.56,
-"Hannibal Mejbri": 0.735,
 "Hazem Mastouri": 1.268,
-"Ismaël Gharbi": 1.529,
-"Mohamed Ali Ben Romdhane": 2.574,
+"Ismaël Gharbi": 2.322,
+"Mohamed Ali Ben Romdhane": 3.705,
 "Montassar Talbi": 0.794,
-"Omar Rekik": 1.0
+"Omar Rekik": 1.0,
+"Youssef Msakni": 0.909
 },
 "turkiye": {
 "Abdülkerim Bardakcı": 0.811,
 "Arda Güler": 2.406,
 "Cenk Tosun": 0.98,
 "Ferdi Kadıoğlu": 0.891,
-"Hakan Çalhanoğlu": 2.185,
+"Hakan Çalhanoğlu": 3.973,
 "Kenan Yıldız": 2.686,
 "Kerem Aktürkoğlu": 5.577,
 "Merih Demiral": 2.295,
@@ -1941,7 +1941,7 @@
 "Billy Forbes": 0.354
 },
 "uganda": {
-"Allan Okello": 1.975,
+"Allan Okello": 2.683,
 "Denis Omedi": 0.794,
 "Elio Capradossi": 0.707,
 "Fahad Bayo": 0.303,
@@ -1953,7 +1953,7 @@
 "Uche Ikpeazu": 0.794
 },
 "ukraine": {
-"Artem Dovbyk": 1.108,
+"Artem Dovbyk": 1.863,
 "Heorhiy Sudakov": 1.444,
 "Illya Zabarnyi": 0.811,
 "Matviy Ponomarenko": 0.891,
@@ -1963,28 +1963,28 @@
 "Oleksiy Hutsulyak": 2.795,
 "Roman Yaremchuk": 1.232,
 "Ruslan Malinovskyi": 2.205,
-"Viktor Tsyhankov": 0.854,
+"Viktor Tsyhankov": 1.104,
 "Vladyslav Vanat": 1.007
 },
 "united arab emirates": {
-"Ali Mabkhout": 0.909,
-"Ali Saleh": 1.196,
+"Ali Mabkhout": 1.515,
+"Ali Saleh": 1.549,
 "Caio Lucas": 1.499,
-"Fábio Lima": 3.496,
+"Fábio Lima": 4.458,
 "Harib Abdalla": 2.831,
 "Hazem Mohammad": 0.397,
 "Khaled Ibrahim": 0.445,
 "Khalifa Al Hammadi": 0.63,
 "Luanzinho": 0.764,
 "Marcus Meloni": 1.216,
-"Sultan Adil": 3.055,
-"Yahya Al-Ghassani": 1.599
+"Sultan Adil": 3.382,
+"Yahya Al-Ghassani": 1.926
 },
 "united states virgin islands": {
 "Jett Blaschka": 0.354
 },
 "uruguay": {
-"Darwin Núñez": 2.286,
+"Darwin Núñez": 2.578,
 "Federico Valverde": 1.159,
 "Federico Viñas": 0.707,
 "Giorgian de Arrascaeta": 1.337,
@@ -2006,7 +2006,7 @@
 "Folarin Balogun": 2.794,
 "Giovanni Reyna": 1.0,
 "Haji Wright": 0.63,
-"Jesús Ferreira": 1.789,
+"Jesús Ferreira": 2.049,
 "Malik Tillman": 1.89,
 "Maximilian Arfsten": 0.63,
 "Patrick Agyemang": 1.26
@@ -2021,7 +2021,7 @@
 "Khojiakbar Alijonov": 0.561,
 "Khojimat Erkinov": 0.915,
 "Oston Urunov": 1.499,
-"Otabek Shukurov": 1.069,
+"Otabek Shukurov": 1.532,
 "Rustam Ashurmatov": 0.354,
 "Sherzod Nasrullaev": 0.724
 },
@@ -2043,7 +2043,7 @@
 "Jon Aramburu": 0.463,
 "Josef Martínez": 0.707,
 "Rubén Ramírez": 0.481,
-"Salomón Rondón": 4.14,
+"Salomón Rondón": 5.378,
 "Telasco Segovia": 1.188,
 "Yeferson Soteldo": 0.292
 },
@@ -2056,11 +2056,11 @@
 "Phạm Tuấn Hải": 1.121
 },
 "wales": {
-"Ben Davies": 0.561,
+"Aaron Ramsey": 0.561,
 "Brennan Johnson": 2.691,
 "Daniel James": 2.819,
 "David Brooks": 1.959,
-"Harry Wilson": 6.237,
+"Harry Wilson": 8.857,
 "Joe Rodon": 1.365,
 "Jordan James": 0.764,
 "Kieffer Moore": 2.005,
@@ -2073,7 +2073,7 @@
 "Abdulwasea Al-Matari": 0.583,
 "Ahmed Maher": 0.292,
 "Mohammed Al-Dahi": 0.7,
-"Nasser Al-Gahwashi": 0.688,
+"Nasser Al-Gahwashi": 1.085,
 "Omar Al-Dahi": 0.303
 },
 "zambia": {

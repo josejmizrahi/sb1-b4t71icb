@@ -210,6 +210,88 @@ def cmd_quiniela(args):
                       f"(modelo {u['p_underdog']:.0%}, E[pts]={u['ep_underdog']:.1f})")
         print("\n  nota: el marcador elegido NO es el mas probable, sino el que "
               "maximiza puntos esperados bajo el tablero de la quiniela.")
+
+        if getattr(args, "recovery", False):
+            from .quiniela import recovery_strategies
+            preds = [p for p in result.predictions][:args.next]
+            rec = recovery_strategies(preds, n_sims=max(3000, args.sims // 4),
+                                      target_gain=args.gap or 0)
+            print(f"\n[ESTRATEGIA DE REMONTADA] (distribucion de puntos de la jornada)")
+            print(f"  {'underdogs':>9s} {'media':>7s} {'P10':>6s} {'P90(upside)':>12s}")
+            for k, s in rec["strategies"].items():
+                star = " <-- REC" if k == rec["recommended_k"] else ""
+                print(f"  {k:>9d} {s['mean']:7.1f} {s['p10']:6.1f} "
+                      f"{s['p90']:12.1f}{star}")
+            best = rec["strategies"][rec["recommended_k"]]
+            print(f"  Recomendado: {rec['recommended_k']} underdog(s); booster en "
+                  f"{best['booster_match']}.")
+            if best["underdog_matches"]:
+                print(f"  Jugar underdog en: {best['underdog_matches']}")
+            print("  (Vas detras -> mas underdogs = menor media pero mayor techo "
+                  "para remontar.)")
+    finally:
+        pipe.close()
+
+
+def cmd_whatif(args):
+    """Recompute a match adjusting for absent key players (injuries/rotation)."""
+    from .model import DixonColesModel, predict_match
+    from .selection import select_covariates
+    from .temporal import predict_first_goal
+    from .teamnames import normalize, normalize_keys
+    from .pipeline import _load_committed_threats
+
+    cfg = load_config()
+    pipe = Pipeline(cfg)
+    try:
+        pipe.ingest()
+        matches = pipe.db.load_matches()
+        rankings = pipe.db.load_rankings()
+        sel = select_covariates(matches, rankings)
+        model = DixonColesModel(sel.selected)
+        model.fit(matches, rankings)
+        threats = normalize_keys(_load_committed_threats())
+
+        home, away = args.home, args.away
+        out_home = [s.strip() for s in (args.home_out or "").split(",") if s.strip()]
+        out_away = [s.strip() for s in (args.away_out or "").split(",") if s.strip()]
+
+        def missing_frac(team, outs):
+            tt = threats.get(normalize(team), {})
+            total = sum(tt.values()) or 1.0
+            miss = sum(w for p, w in tt.items()
+                       if any(o.lower() in p.lower() for o in outs))
+            return miss / total
+
+        lam_h, lam_a, rho = model.predict_lambdas(home, away)
+        fh, fa = missing_frac(home, out_home), missing_frac(away, out_away)
+        ALPHA = 0.6   # losing X% of scoring threat -> ~0.6X lambda reduction
+        adj_h = lam_h * (1 - ALPHA * fh)
+        adj_a = lam_a * (1 - ALPHA * fa)
+
+        def summarize(lh, la, label, drop_h=None, drop_a=None):
+            from .model import simulate_match
+            import numpy as np
+            hg, ag = simulate_match(lh, la, rho, n_sims=args.sims, seed=1)
+            ph, pd, pa = float(np.mean(hg > ag)), float(np.mean(hg == ag)), float(np.mean(hg < ag))
+            th = {p: w for p, w in threats.get(normalize(home), {}).items()
+                  if not (drop_h and any(o.lower() in p.lower() for o in drop_h))}
+            ta = {p: w for p, w in threats.get(normalize(away), {}).items()
+                  if not (drop_a and any(o.lower() in p.lower() for o in drop_a))}
+            fg = predict_first_goal(lh, la, home_xi_threat=th, away_xi_threat=ta,
+                                    home_team=home, away_team=away)
+            print(f"  [{label}] lam {lh:.2f}-{la:.2f} | "
+                  f"{home} {ph:.0%} / Empate {pd:.0%} / {away} {pa:.0%}")
+            print("     1er goleador:", ", ".join(
+                f"{s['player']} {s['prob']:.0%}" for s in fg.likely_scorers[:4]))
+
+        print(f"\n[WHAT-IF] {home} vs {away}")
+        if out_home:
+            print(f"  bajas {home}: {out_home}  (-{fh:.0%} amenaza ofensiva)")
+        if out_away:
+            print(f"  bajas {away}: {out_away}  (-{fa:.0%} amenaza ofensiva)")
+        summarize(lam_h, lam_a, "SIN bajas")
+        summarize(adj_h, adj_a, "CON bajas", drop_h=out_home, drop_a=out_away)
     finally:
         pipe.close()
 
@@ -263,6 +345,7 @@ def main(argv=None):
     sub = p.add_subparsers(dest="cmd", required=True)
     for name, fn in (("predict", cmd_predict), ("backtest", cmd_backtest),
                      ("simulate-j1", cmd_simulate_j1), ("quiniela", cmd_quiniela),
+                     ("whatif", cmd_whatif),
                      ("pipeline", cmd_pipeline), ("watch", cmd_watch),
                      ("lineups", cmd_lineups)):
         sp = sub.add_parser(name)
@@ -274,6 +357,17 @@ def main(argv=None):
         if name == "quiniela":
             sp.add_argument("--next", type=int, default=16,
                             help="How many upcoming matches (next matchday)")
+            sp.add_argument("--recovery", action="store_true",
+                            help="Show the catch-up (variance) strategy analysis")
+            sp.add_argument("--gap", type=float, default=0,
+                            help="Points you must gain on the leader (for recovery)")
+        if name == "whatif":
+            sp.add_argument("--home", required=True)
+            sp.add_argument("--away", required=True)
+            sp.add_argument("--home-out", default="", dest="home_out",
+                            help="Comma-separated absent home players")
+            sp.add_argument("--away-out", default="", dest="away_out",
+                            help="Comma-separated absent away players")
         if name == "predict":
             sp.add_argument("--out", default="reports/report.html")
         if name == "watch":
