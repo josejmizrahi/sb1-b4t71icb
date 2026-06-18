@@ -47,6 +47,7 @@ def render_report(result: PipelineResult, path: str = "reports/report.html") -> 
                           else result.ml_fit.importances[:12]),
         "standings": result.standings or [],
         "descriptive": result.descriptive or {},
+        "variable_evidence": result.variable_evidence or [],
         "selection": {
             "selected": result.selection.selected,
             "dropped": result.selection.dropped,
@@ -169,6 +170,22 @@ for(const c of s.candidates||Object.keys(s.correlations)){
 H+=`</table>`;
 if(s.notes&&s.notes.length){H+=`<div class="small mut" style="margin-top:8px">`+s.notes.map(esc).join('<br>')+`</div>`;}
 H+=`</div>`;
+
+// Variable evidence: univariate vs partial (controlling for xG)
+if(D.variable_evidence && D.variable_evidence.length){
+  H+=`<h2>Por que cada variable entra (o no) al motor</h2><div class="card">
+      <div class="small mut">Correlacion con la diferencia de goles. <b>r univariada</b>: la relacion cruda (puede enganar). <b>r con xG</b>: cuanto se confunde con el xG. <b>r parcial|xG</b>: el aporte UNICO una vez descontado el xG. Una variable solo merece estar en el motor si su parcial es fuerte; si no, es redundante con el xG.</div>
+      <table><tr><th>Variable</th><th>r univariada</th><th>r con xG</th><th>r parcial | xG</th><th>Estado</th></tr>`;
+  for(const e of D.variable_evidence){
+    const eng=e.in_engine;
+    H+=`<tr><td>${esc(e.variable)}</td>
+        <td>${f(e.r_uni,2)} <span class="small mut">(p=${f(e.p_uni,2)})</span></td>
+        <td>${e.variable==='xg_attack'||e.variable==='rank_strength'?'<span class="mut">—</span>':f(e.r_with_xg,2)}</td>
+        <td>${e.variable==='xg_attack'||e.variable==='rank_strength'?'<span class="mut">—</span>':f(e.r_partial,2)+' <span class=\"small mut\">(p='+f(e.p_partial,2)+')</span>'}</td>
+        <td class="${eng?'sig':'nsig'}">${eng?'MOTOR':'descriptiva'}</td></tr>`;
+  }
+  H+=`<div class="small mut" style="margin-top:6px">Lectura: posesion y pases tienen r univariada positiva pero se confunden con el xG; su r parcial|xG cae a ~0 o negativa ("posesion esteril"). Por eso quedan fuera del motor.</div></div>`;
+}
 
 // Wald
 H+=`<h2>Pesos estimados por MLE (test de Wald)</h2><div class="card"><table>
