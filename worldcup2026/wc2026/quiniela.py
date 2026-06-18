@@ -41,15 +41,21 @@ def _sign(x: int) -> int:
     return (x > 0) - (x < 0)
 
 
-def optimize_scoreline(M: np.ndarray, scoring=SCORING, restrict_outcome=None):
+def optimize_scoreline(M: np.ndarray, scoring=SCORING, restrict_outcome=None,
+                       prefer: tuple[float, float] | None = None,
+                       tol: float = 0.5):
     """Pick (h,a) maximizing expected score-related points under the joint pmf M.
     If ``restrict_outcome`` ('H'/'D'/'A') is given, only scorelines of that
-    outcome are considered (used for the deliberate underdog play).
+    outcome are considered (the deliberate underdog play).
+
+    ``prefer`` (lam_home, lam_away): among scorelines whose expected points are
+    within ``tol`` of the maximum, pick the one CLOSEST to the expected goals.
+    This leans clear favorites toward the likely goleada (e.g. 0-4 instead of the
+    flat-EV 0-3) while leaving even games at 1-1 (where 1-1 alone is near-optimal).
     Returns (best_h, best_a, expected_points, breakdown_probs)."""
     n = M.shape[0]
-    # precompute marginals and outcome/diff distributions
-    p_home_goals = M.sum(axis=1)          # P(home scores exactly h)
-    p_away_goals = M.sum(axis=0)          # P(away scores exactly a)
+    p_home_goals = M.sum(axis=1)
+    p_away_goals = M.sum(axis=0)
     p_outcome = {"H": 0.0, "D": 0.0, "A": 0.0}
     p_diff: dict[int, float] = {}
     for h in range(n):
@@ -58,7 +64,7 @@ def optimize_scoreline(M: np.ndarray, scoring=SCORING, restrict_outcome=None):
             p_outcome["H" if h > a else "D" if h == a else "A"] += p
             p_diff[h - a] = p_diff.get(h - a, 0.0) + p
 
-    best = None
+    cells = []
     for h in range(n):
         for a in range(n):
             o = "H" if h > a else "D" if h == a else "A"
@@ -68,20 +74,29 @@ def optimize_scoreline(M: np.ndarray, scoring=SCORING, restrict_outcome=None):
                   + scoring["goles_local"] * p_home_goals[h]
                   + scoring["goles_visita"] * p_away_goals[a]
                   + scoring["diferencia"] * p_diff.get(h - a, 0.0))
-            if best is None or ep > best[2]:
-                best = (h, a, ep, {
-                    "p_resultado": p_outcome[o],
-                    "p_goles_local": float(p_home_goals[h]),
-                    "p_goles_visita": float(p_away_goals[a]),
-                    "p_diferencia": p_diff.get(h - a, 0.0),
-                })
-    return best
+            cells.append((h, a, ep))
+    if not cells:
+        return None
+    max_ep = max(c[2] for c in cells)
+    if prefer is not None:
+        lh, la = prefer
+        cands = [c for c in cells if c[2] >= max_ep - tol]
+        h, a, ep = min(cands, key=lambda c: (c[0] - lh) ** 2 + (c[1] - la) ** 2)
+    else:
+        h, a, ep = max(cells, key=lambda c: c[2])
+    return (h, a, ep, {
+        "p_resultado": p_outcome["H" if h > a else "D" if h == a else "A"],
+        "p_goles_local": float(p_home_goals[h]),
+        "p_goles_visita": float(p_away_goals[a]),
+        "p_diferencia": p_diff.get(h - a, 0.0),
+    })
 
 
 def match_picks(pred: dict, scoring=SCORING) -> dict:
     """Full point-maximizing pick for one match + expected-points breakdown."""
     M = score_matrix(pred["lam_home"], pred["lam_away"], pred.get("rho", 0.0), MAXG)
-    h, a, ep_score, br = optimize_scoreline(M, scoring)
+    prefer = (pred["lam_home"], pred["lam_away"])
+    h, a, ep_score, br = optimize_scoreline(M, scoring, prefer=prefer)
 
     # first team to score: pick the more likely; EV = points * its probability
     fg = pred.get("first_goal", {})
@@ -117,7 +132,8 @@ def match_picks(pred: dict, scoring=SCORING) -> dict:
     # (assumes you'd be in the <=10% that picked it). This is the climber's bet.
     ep_dog = total_ep
     dog_score = (h, a)
-    ud = optimize_scoreline(M, scoring, restrict_outcome=underdog_outcome)
+    ud = optimize_scoreline(M, scoring, restrict_outcome=underdog_outcome,
+                            prefer=prefer)
     if ud is not None:
         dog_score = (ud[0], ud[1])
         ep_dog = (ud[2] + ep_first_team + ep_first_scorer
