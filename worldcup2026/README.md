@@ -231,6 +231,37 @@ Esta sección no es decorativa: es el punto del proyecto.
    (xG vía BALLDONTLIE) y aun así el reporte muestra la comparación honesta y
    despliega el mejor out-of-sample si usas `ENGINE=auto`.
 
+10. **Calibración con 28 partidos reales del Mundial 2026: el modelo NO le gana
+    a "elige al favorito" para el 1X2, y lo decimos.** Validación leave-one-out
+    sobre los 28 partidos jugados:
+
+    | Estrategia                       | Acierto 1X2 |
+    |----------------------------------|-------------|
+    | Dixon-Coles (Elo, argmax)        | **39 %** (log-loss 1.08, p=0.31) |
+    | Elegir al favorito Elo/FIFA      | **57 %** |
+    | Equipo "local" (1.º listado)     | 54 % |
+    | Azar                             | 33 % |
+
+    La causa es honesta: **36 % de esos partidos fueron empates** (10 de 28,
+    históricamente alto y muy ruidoso con muestra chica). Ningún modelo de
+    máxima-probabilidad elige "empate" como pick único — la P(empate) casi nunca
+    es la más alta —, así que el techo de cualquier estrategia que no predice
+    empates es ~64 %. Probamos la regla "predice empate cuando el Elo está
+    parejo": en muestra daba 64 %, pero **fuera de muestra colapsa a 46 %** (peor
+    que el favorito). Los empates **no** se agrupan en partidos parejos: querer
+    anticiparlos es puro sobreajuste. En los partidos no-empate el modelo sí
+    acierta el ganador 61 % de las veces.
+
+    **Conclusión operativa:** para acertar el **ganador (1X2)** elige al
+    **favorito Elo** (lo mejor disponible, ~57 %); no te dejes engañar por el
+    marcador modal "1-1" que aparece en partidos parejos (es un artefacto del
+    Dixon-Coles, no una predicción de empate). Para **puntuar en la quiniela**
+    usa el **optimizador de puntos esperados** (`wc2026 quiniela`), que sí se
+    inclina al favorito en el marcador exacto (Bosnia 57 % → 2-1, no 1-1) y suma
+    goleada/booster/underdogs. El modelo probabilístico no es para elegir 1X2 a
+    secas, sino para alimentar marcadores exactos, goleadores y la estrategia de
+    varianza del pozo.
+
 ---
 
 ## Integración externa
