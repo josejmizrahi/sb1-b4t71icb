@@ -231,36 +231,38 @@ Esta sección no es decorativa: es el punto del proyecto.
    (xG vía BALLDONTLIE) y aun así el reporte muestra la comparación honesta y
    despliega el mejor out-of-sample si usas `ENGINE=auto`.
 
-10. **Calibración con 28 partidos reales del Mundial 2026: el modelo NO le gana
-    a "elige al favorito" para el 1X2, y lo decimos.** Validación leave-one-out
-    sobre los 28 partidos jugados:
+10. **Calibración con 56 partidos reales del Mundial 2026 (J1 + J2 completas).**
+    Validación leave-one-out sobre los 56 partidos jugados:
 
     | Estrategia                       | Acierto 1X2 |
     |----------------------------------|-------------|
-    | Dixon-Coles (Elo, argmax)        | **39 %** (log-loss 1.08, p=0.31) |
-    | Elegir al favorito Elo/FIFA      | **57 %** |
+    | **Dixon-Coles (Elo, argmax)**    | **62.5 %** (log-loss 0.94, Brier 0.55, p<0.001) |
+    | Elegir al favorito Elo/FIFA      | 62.5 % |
     | Equipo "local" (1.º listado)     | 54 % |
     | Azar                             | 33 % |
 
-    La causa es honesta: **36 % de esos partidos fueron empates** (10 de 28,
-    históricamente alto y muy ruidoso con muestra chica). Ningún modelo de
-    máxima-probabilidad elige "empate" como pick único — la P(empate) casi nunca
-    es la más alta —, así que el techo de cualquier estrategia que no predice
-    empates es ~64 %. Probamos la regla "predice empate cuando el Elo está
-    parejo": en muestra daba 64 %, pero **fuera de muestra colapsa a 46 %** (peor
-    que el favorito). Los empates **no** se agrupan en partidos parejos: querer
-    anticiparlos es puro sobreajuste. En los partidos no-empate el modelo sí
-    acierta el ganador 61 % de las veces.
+    Con la muestra ya razonable el modelo **iguala al favorito (62.5 %)** y le gana
+    en log-loss (probabilidades bien calibradas), siendo **significativo frente al
+    azar (p<0.001)**. En los partidos no-empate acierta el ganador **83 %** de las
+    veces; el resto son empates (**25 %** de los partidos, ya en su rango histórico
+    normal).
 
-    **Conclusión operativa:** para acertar el **ganador (1X2)** elige al
-    **favorito Elo** (lo mejor disponible, ~57 %); no te dejes engañar por el
-    marcador modal "1-1" que aparece en partidos parejos (es un artefacto del
-    Dixon-Coles, no una predicción de empate). Para **puntuar en la quiniela**
-    usa el **optimizador de puntos esperados** (`wc2026 quiniela`), que sí se
-    inclina al favorito en el marcador exacto (Bosnia 57 % → 2-1, no 1-1) y suma
-    goleada/booster/underdogs. El modelo probabilístico no es para elegir 1X2 a
-    secas, sino para alimentar marcadores exactos, goleadores y la estrategia de
-    varianza del pozo.
+    > **Nota de honestidad — cómo evolucionó esto.** Con solo 28 partidos (J1) el
+    > modelo daba 39 % y *quedaba por debajo* del favorito (57 %), porque ese
+    > primer corte tuvo un **36 % de empates** (ruido de muestra chica). No
+    > sobreajustamos a esa anomalía: mantuvimos una sola variable (`elo_strength`)
+    > y dejamos que llegaran más datos. Al duplicarse la muestra, el acierto subió
+    > a 62.5 % y el % de empates se normalizó. Probar reglas para "cazar empates"
+    > seguía colapsando fuera de muestra (los empates no se agrupan por Elo
+    > parejo): siguen siendo lo impredecible.
+
+    **Conclusión operativa:** para el **ganador (1X2)** el modelo ya es tan bueno
+    como elegir al favorito y con mejores probabilidades; no te dejes engañar por
+    el marcador modal "1-1" de partidos parejos (artefacto del Dixon-Coles, no una
+    predicción de empate). Para **puntuar en la quiniela** usa el **optimizador de
+    puntos esperados** (`wc2026 quiniela`), que se inclina al favorito en el
+    marcador exacto y suma goleada/booster/underdogs. El modelo probabilístico
+    alimenta marcadores exactos, goleadores y la estrategia de varianza del pozo.
 
 ---
 
