@@ -184,9 +184,9 @@ def cmd_quiniela(args):
         print(f"  proximos {len(q['picks'])} partidos  |  "
               f"puntos esperados totales: {q['total_expected_points']:.1f}")
         if q.get("knockout"):
-            print("  >> RONDA ELIMINATORIA: sin booster x2 (solo aplica en fase "
-                  "de grupos). El 'resultado' es en 90'; un empate va a "
-                  "prorroga/penales.")
+            print("  >> RONDA ELIMINATORIA: hay booster x2 (uno por ronda). El "
+                  "'resultado' es en 90'; un empate va a prorroga/penales. Desde "
+                  "atras, boostea el partido mas DIFERENCIADO, no el favorito obvio.")
         print()
         hdr = (f"  {'partido':36s} {'marcador':>8s} {'1er equipo':>14s} "
                f"{'1er goleador':>20s} {'E[pts]':>7s}")

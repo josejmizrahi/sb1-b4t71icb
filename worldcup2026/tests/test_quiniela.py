@@ -57,9 +57,9 @@ def test_build_quiniela_picks_booster_highest_ev():
     assert q["total_expected_points"] > 0
 
 
-def test_knockout_suppresses_booster():
-    # In knockout rounds there is NO booster (pool rule). build_quiniela must
-    # return None for both boosters and flag knockout=True.
+def test_knockout_keeps_booster_and_flags_round():
+    # There is a booster in EVERY round, knockout included (one per round).
+    # build_quiniela must still recommend a booster and flag knockout=True.
     preds = [
         {"home_team": "Spain", "away_team": "Belgium", "utc_date": "2026-07-10T18:00",
          "is_knockout": True, "lam_home": 2.0, "lam_away": 0.8, "rho": -0.02,
@@ -70,8 +70,8 @@ def test_knockout_suppresses_booster():
     ]
     q = build_quiniela(preds)
     assert q["knockout"] is True
-    assert q["booster_safe"] is None and q["booster_climber"] is None
-    assert q["booster_match"] is None
+    assert q["booster_safe"] is not None
+    assert q["booster_match"] is not None
     assert len(q["picks"]) == 2
 
 
