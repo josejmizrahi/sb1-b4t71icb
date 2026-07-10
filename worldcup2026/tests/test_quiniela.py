@@ -57,6 +57,51 @@ def test_build_quiniela_picks_booster_highest_ev():
     assert q["total_expected_points"] > 0
 
 
+def test_knockout_suppresses_booster():
+    # In knockout rounds there is NO booster (pool rule). build_quiniela must
+    # return None for both boosters and flag knockout=True.
+    preds = [
+        {"home_team": "Spain", "away_team": "Belgium", "utc_date": "2026-07-10T18:00",
+         "is_knockout": True, "lam_home": 2.0, "lam_away": 0.8, "rho": -0.02,
+         "prob_home": 0.65, "prob_draw": 0.24, "prob_away": 0.11, "first_goal": {}},
+        {"home_team": "Norway", "away_team": "England", "utc_date": "2026-07-10T21:00",
+         "is_knockout": True, "lam_home": 1.0, "lam_away": 1.6, "rho": -0.02,
+         "prob_home": 0.28, "prob_draw": 0.26, "prob_away": 0.46, "first_goal": {}},
+    ]
+    q = build_quiniela(preds)
+    assert q["knockout"] is True
+    assert q["booster_safe"] is None and q["booster_climber"] is None
+    assert q["booster_match"] is None
+    assert len(q["picks"]) == 2
+
+
+def test_group_stage_keeps_booster():
+    # A group-stage matchday (is_knockout False/absent) still recommends a booster.
+    preds = [
+        {"home_team": "A", "away_team": "B", "utc_date": "2026-06-20T12:00",
+         "is_knockout": False, "lam_home": 2.6, "lam_away": 0.4, "rho": 0.0,
+         "prob_home": 0.85, "prob_draw": 0.1, "prob_away": 0.05, "first_goal": {}},
+    ]
+    q = build_quiniela(preds)
+    assert q["knockout"] is False
+    assert q["booster_safe"] is not None
+
+
+def test_real_matchup_excludes_placeholders():
+    from wc2026.pipeline import _is_real_team, _is_real_matchup
+    from wc2026.types import Match
+    assert _is_real_team("Spain") and _is_real_team("Belgium")
+    for ph in ("W93", "L101", "1A", "2B", "TBD", "Winner Group A", "Runner-up C"):
+        assert not _is_real_team(ph), ph
+    real = Match(provider_id="x", utc_date="2026-07-10", competition="WC",
+                 home_team="Spain", away_team="Belgium", status="SCHEDULED",
+                 group="Quarter-final")
+    ph = Match(provider_id="y", utc_date="2026-07-14", competition="WC",
+               home_team="W97", away_team="W98", status="SCHEDULED",
+               group="Semi-final")
+    assert _is_real_matchup(real) and not _is_real_matchup(ph)
+
+
 def test_points_for_pick_and_recovery():
     from wc2026.quiniela import _points_for_pick, recovery_strategies, SCORING
     # exact 2-1 hit: resultado(3)+local(2)+visita(2)+diferencia(3) = 10

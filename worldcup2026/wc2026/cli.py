@@ -182,7 +182,12 @@ def cmd_quiniela(args):
         print(f"\n[QUINIELA] picks que MAXIMIZAN puntos esperados "
               f"(motor={result.engine}, modo={result.mode})")
         print(f"  proximos {len(q['picks'])} partidos  |  "
-              f"puntos esperados totales: {q['total_expected_points']:.1f}\n")
+              f"puntos esperados totales: {q['total_expected_points']:.1f}")
+        if q.get("knockout"):
+            print("  >> RONDA ELIMINATORIA: sin booster x2 (solo aplica en fase "
+                  "de grupos). El 'resultado' es en 90'; un empate va a "
+                  "prorroga/penales.")
+        print()
         hdr = (f"  {'partido':36s} {'marcador':>8s} {'1er equipo':>14s} "
                f"{'1er goleador':>20s} {'E[pts]':>7s}")
         print(hdr)

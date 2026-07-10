@@ -97,6 +97,7 @@ class Database:
                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                ON CONFLICT(provider_id) DO UPDATE SET
                  utc_date=excluded.utc_date, status=excluded.status,
+                 home_team=excluded.home_team, away_team=excluded.away_team,
                  home_goals=excluded.home_goals, away_goals=excluded.away_goals,
                  stats_json=excluded.stats_json, home_xi_json=excluded.home_xi_json,
                  away_xi_json=excluded.away_xi_json,

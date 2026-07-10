@@ -257,14 +257,22 @@ def build_quiniela(predictions: list[dict], scoring=SCORING,
         upcoming = upcoming[:matchday_size]
     picks = [match_picks(p, scoring) for p in upcoming]
 
+    # Knockout rounds have NO booster (pool rule: el booster x2 solo aplica en
+    # fase de grupos). If every upcoming fixture is a knockout tie, suppress the
+    # booster recommendations and say so.
+    knockout = bool(upcoming) and all(p.get("is_knockout") for p in upcoming)
+
     # Booster x2 -- two recommendations for two risk appetites:
     #  SAFE: double the highest expected-points match (protects your position).
     #  CLIMBER: double the best deliberate-underdog play (lower mean, high upside
     #           -- the +EV move when you must leapfrog people from behind).
-    booster_safe = max(picks, key=lambda x: x["expected_points"]) if picks else None
-    dog_pool = [p for p in picks if p["p_underdog"] >= 0.22]
-    booster_climber = (max(dog_pool, key=lambda x: x["ep_underdog"])
-                       if dog_pool else None)
+    if knockout:
+        booster_safe = booster_climber = None
+    else:
+        booster_safe = max(picks, key=lambda x: x["expected_points"]) if picks else None
+        dog_pool = [p for p in picks if p["p_underdog"] >= 0.22]
+        booster_climber = (max(dog_pool, key=lambda x: x["ep_underdog"])
+                           if dog_pool else None)
 
     # Underdog candidates: clear favorite by the crowd but model gives the upset
     # a meaningful chance -> good differentiation if it hits (<=10% will pick it).
@@ -293,5 +301,6 @@ def build_quiniela(predictions: list[dict], scoring=SCORING,
             "p_underdog": u["p_underdog"],
             "ep_underdog": u["ep_underdog"]} for u in underdogs],
         "total_expected_points": sum(p["expected_points"] for p in picks),
+        "knockout": knockout,
         "scoring": scoring,
     }
